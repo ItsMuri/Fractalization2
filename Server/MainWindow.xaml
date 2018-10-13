@@ -7,6 +7,12 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        
+        <ListBox x:Name="lbComputerAvailable" HorizontalAlignment="Left" Height="127" Margin="672,41,0,0" VerticalAlignment="Top" Width="110"/>
+        <Label Content="Computer(s) available:" HorizontalAlignment="Left" Margin="667,10,0,0" VerticalAlignment="Top"/>
+        <Label Content="Iterations:" HorizontalAlignment="Left" Margin="635,182,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="tbIterations" HorizontalAlignment="Left" Height="20" Margin="697,186,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="85"/>
+        <Canvas x:Name="canvasDraw" HorizontalAlignment="Left" Height="399" Margin="10,10,0,0" VerticalAlignment="Top" Width="620" Background="Blue"/>
+        <Button Content="Calculate" HorizontalAlignment="Left" Margin="672,274,0,0" VerticalAlignment="Top" Width="110" Height="45"/>
+
     </Grid>
 </Window>
