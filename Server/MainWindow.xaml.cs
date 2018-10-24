@@ -42,10 +42,11 @@ namespace Server
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            Task t = CalculateTask();
+            //Task t = CalculateTask();
+
         }
 
-        private async Task CalculateTask()
+        /*private async Task CalculateTask()
         {
             while (true)
             {
@@ -70,6 +71,29 @@ namespace Server
                     }
                 }
             }
+        }*/
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            //Dieser Code wird erst verwendet wenn wir erste Testclients haben!
+
+            /*
+            int countAvailablePcS = 0;
+            string[] availablePcS = new string[100];
+            bool isOn;
+            TcpClient expeditionClient = new TcpClient();
+
+            for (int i = 0; i < 5560; i++)
+            {
+                expeditionClient.Connect(IPAddress.Loopback,i);
+                isOn = expeditionClient.Client.Connected;
+                if (isOn == true)
+                {
+                    countAvailablePcS++;
+                    labelComputerAvailable.Content = countAvailablePcS;
+                }
+            }
+            */
         }
     }
 }

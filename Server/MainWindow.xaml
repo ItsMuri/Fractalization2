@@ -5,15 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Server"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="800" Loaded="Window_Loaded">
     <Grid>
-        <ListBox x:Name="lbComputerAvailable" HorizontalAlignment="Left" Height="127" Margin="672,41,0,0" VerticalAlignment="Top" Width="110"/>
-        <Label Content="Computer(s) available:" HorizontalAlignment="Left" Margin="667,10,0,0" VerticalAlignment="Top"/>
-        <Label Content="Iterations:" HorizontalAlignment="Left" Margin="635,182,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="tbIterations" HorizontalAlignment="Left" Height="20" Margin="697,186,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="85"/>
-        <Canvas x:Name="canvasDraw" HorizontalAlignment="Left" Height="399" Margin="10,10,0,0" VerticalAlignment="Top" Width="620" Background="Blue"/>
-        <Button Content="Calculate" HorizontalAlignment="Left" Margin="672,274,0,0" VerticalAlignment="Top" Width="110" Height="45" Click="Button_Click" Loaded="Button_Loaded"/>
-        <Slider HorizontalAlignment="Left" Margin="667,368,0,0" VerticalAlignment="Top" Width="115"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="101*"/>
+            <ColumnDefinition Width="31*"/>
+        </Grid.ColumnDefinitions>
+        <Label Content="Computer(s) available:" HorizontalAlignment="Left" Margin="61.455,10,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+        <Label Content="Iterations:" HorizontalAlignment="Left" Margin="29.455,182,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+        <TextBox x:Name="tbIterations" HorizontalAlignment="Left" Height="20" Margin="91.455,186,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="85" Grid.Column="1"/>
+        <Canvas x:Name="canvasDraw" HorizontalAlignment="Left" Height="399" Margin="10,10,0,0" VerticalAlignment="Top" Width="620" Background="Blue" Grid.ColumnSpan="2"/>
+        <Button x:Name="btnCalculate" Content="Calculate" HorizontalAlignment="Left" Margin="66.455,274,0,0" VerticalAlignment="Top" Width="110" Height="45" Click="Button_Click" Loaded="Button_Loaded" Grid.Column="1"/>
+        <Slider HorizontalAlignment="Left" Margin="61.455,368,0,0" VerticalAlignment="Top" Width="115" Grid.Column="1"/>
+        <Label x:Name="labelComputerAvailable" Content="counter" Grid.Column="1" HorizontalAlignment="Left" Margin="91,41,0,0" VerticalAlignment="Top" Height="47" Width="75"/>
 
     </Grid>
 </Window>
