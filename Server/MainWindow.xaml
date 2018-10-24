@@ -13,6 +13,7 @@
         <TextBox x:Name="tbIterations" HorizontalAlignment="Left" Height="20" Margin="697,186,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="85"/>
         <Canvas x:Name="canvasDraw" HorizontalAlignment="Left" Height="399" Margin="10,10,0,0" VerticalAlignment="Top" Width="620" Background="Blue"/>
         <Button Content="Calculate" HorizontalAlignment="Left" Margin="672,274,0,0" VerticalAlignment="Top" Width="110" Height="45" Click="Button_Click" Loaded="Button_Loaded"/>
+        <Slider HorizontalAlignment="Left" Margin="667,368,0,0" VerticalAlignment="Top" Width="115"/>
 
     </Grid>
 </Window>
