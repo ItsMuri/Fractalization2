@@ -29,6 +29,9 @@ namespace Server
         public MainWindow()
         {
             InitializeComponent();
+            int iterationsCount = Convert.ToInt32(tbIterations.Text);
+            Fraktal myFraktal = new Fraktal(iterationsCount);
+            
         }
 
         private void Button_Loaded(object sender, RoutedEventArgs e)
@@ -83,7 +86,7 @@ namespace Server
             bool isOn;
             TcpClient expeditionClient = new TcpClient();
 
-            for (int i = 0; i < 5560; i++)
+            for (int i = 5460; i <= 5560; i++)
             {
                 expeditionClient.Connect(IPAddress.Loopback,i);
                 isOn = expeditionClient.Client.Connected;
@@ -91,9 +94,10 @@ namespace Server
                 {
                     countAvailablePcS++;
                     labelComputerAvailable.Content = countAvailablePcS;
+                    expeditionClient.Close();
                 }
-            }
-            */
+            }*/
+            
         }
     }
 }
