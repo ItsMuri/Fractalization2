@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,6 +32,40 @@ namespace Server
             InitializeComponent();
             int iterationsCount = Convert.ToInt32(tbIterations.Text);
             Fraktal myFraktal = new Fraktal(iterationsCount);
+            //Koordinaten versenden!
+            double[] xCoordinates = new double[5];
+            for (int i = 0; i < 5; i++)
+            {
+                xCoordinates[i] = -2.0 + i;
+            }
+            myFraktal.KoordinatenX = xCoordinates; //X Koordinaten gesetzt!
+            double[] ycoordinates = new double[2];
+            double imaginaryNumber = Math.Sqrt(-1);
+            ycoordinates[0] = Math.Sqrt(-imaginaryNumber);
+            ycoordinates[1] = Math.Sqrt(imaginaryNumber);
+            myFraktal.KoordinatenY = ycoordinates; //Y Koordinaten gesetzt!
+
+            //Senden(myFraktal);
+            //Empfangen();
+
+        }
+
+        private void Empfangen()
+        {
+            //Hier wird dann später empfangen
+            var serializer = new DataContractSerializer(typeof(Fraktal));
+            NetworkStream netStream = new NetworkStream(new Socket(SocketType.Stream, ProtocolType.Tcp));
+            Fraktal verabeiteteDaten = (Fraktal)serializer.ReadObject(netStream);
+        }
+
+        private void Senden(Fraktal myFraktal)
+        {
+            //Hier werden nun die Informationen gesendet
+            NetworkStream netStream = new NetworkStream(new Socket(SocketType.Stream, ProtocolType.Tcp));
+            var serializer = new DataContractSerializer(typeof(Fraktal));
+            serializer.WriteObject(netStream, myFraktal);
+            netStream.Position = 0;
+
             
         }
 
