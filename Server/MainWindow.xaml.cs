@@ -45,8 +45,11 @@ namespace Server
             ycoordinates[1] = Math.Sqrt(imaginaryNumber);
             myFraktal.KoordinatenY = ycoordinates; //Y Koordinaten gesetzt!
 
-            //Senden(myFraktal);
-            //Empfangen();
+            Task senden = new Task(()=>
+            {
+                Senden(myFraktal);
+            });
+            //senden.Start();
 
         }
 
@@ -66,7 +69,12 @@ namespace Server
             serializer.WriteObject(netStream, myFraktal);
             netStream.Position = 0;
 
-            
+            Task empfangen = new Task(() =>
+            {
+                Empfangen();
+            });
+            //empfangen.Start();
+            //Ich rufe als Abschluss nun also die Empfangsmethode auf.
         }
 
         private void Button_Loaded(object sender, RoutedEventArgs e)
