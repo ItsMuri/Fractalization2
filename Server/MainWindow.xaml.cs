@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -32,7 +34,6 @@ namespace Server
             InitializeComponent();
             int iterationsCount = Convert.ToInt32(tbIterations.Text);
             Fraktal myFraktal = new Fraktal(iterationsCount);
-            //Koordinaten versenden!
             double[] xCoordinates = new double[5];
             for (int i = 0; i < 5; i++)
             {
@@ -45,12 +46,24 @@ namespace Server
             ycoordinates[1] = Math.Sqrt(imaginaryNumber);
             myFraktal.KoordinatenY = ycoordinates; //Y Koordinaten gesetzt!
 
-            Task senden = new Task(()=>
+            Task senden = new Task(() =>
             {
                 Senden(myFraktal);
             });
             //senden.Start();
 
+
+            //Zeichnen lassen
+            //Vielleicht kann man das mit WriteableBitmap zeichnen lassen...
+            ZeichneFraktal();
+
+        }
+
+        private void ZeichneFraktal()
+        {
+            // Bitmap zum Zeichnen des Fraktals verwenden!
+            Bitmap myBitmap = new Bitmap(Convert.ToInt32(imageFraktal.Width),Convert.ToInt32(imageFraktal.Height));
+            //Referenz auf Video YT in liked Liste!
         }
 
         private void Empfangen()
@@ -140,7 +153,7 @@ namespace Server
                     expeditionClient.Close();
                 }
             }*/
-            
+
         }
     }
 }
