@@ -31,7 +31,7 @@ namespace Server
         {
             InitializeComponent();
             int iterationsCount = Convert.ToInt32(tbIterations.Text);
-            Fraktal myFraktal = new Fraktal(iterationsCount);
+            FraktalSrv myFraktal = new FraktalSrv(iterationsCount);
             //Koordinaten versenden!
             double[] xCoordinates = new double[5];
             for (int i = 0; i < 5; i++)
@@ -45,37 +45,46 @@ namespace Server
             ycoordinates[1] = Math.Sqrt(imaginaryNumber);
             myFraktal.KoordinatenY = ycoordinates; //Y Koordinaten gesetzt!
 
-            Task senden = new Task(()=>
-            {
-                Senden(myFraktal);
-            });
+            Task senden = new Task(() => { Senden(myFraktal); });
             //senden.Start();
+        }
 
+
+        private void Senden(FraktalSrv myFraktal)
+        {
+            while (true)
+            {
+                TcpClient tcpClient = listener.AcceptTcpClient();
+
+                //Hier werden nun die Informationen gesendet
+
+                using (NetworkStream netStream = tcpClient.GetStream())
+                {
+                    var serializer = new DataContractSerializer(typeof(FraktalSrv));
+                    serializer.WriteObject(netStream, myFraktal);
+                    netStream.Position = 0;
+
+                    tcpClient.Client.Shutdown(SocketShutdown.Send);
+
+
+                    var ser = new DataContractSerializer(typeof(FraktalSrv));
+                    FraktalSrv verabeiteteDaten = (FraktalSrv) ser.ReadObject(netStream);
+                }
+
+                //Task empfangen = new Task(() => { Empfangen(); });
+                //empfangen.Start();
+                //Ich rufe als Abschluss nun also die Empfangsmethode auf.
+            }
         }
 
         private void Empfangen()
         {
             //Hier wird dann später empfangen
-            var serializer = new DataContractSerializer(typeof(Fraktal));
+            var serializer = new DataContractSerializer(typeof(FraktalSrv));
             NetworkStream netStream = new NetworkStream(new Socket(SocketType.Stream, ProtocolType.Tcp));
-            Fraktal verabeiteteDaten = (Fraktal)serializer.ReadObject(netStream);
+            FraktalSrv verabeiteteDaten = (FraktalSrv) serializer.ReadObject(netStream);
         }
 
-        private void Senden(Fraktal myFraktal)
-        {
-            //Hier werden nun die Informationen gesendet
-            NetworkStream netStream = new NetworkStream(new Socket(SocketType.Stream, ProtocolType.Tcp));
-            var serializer = new DataContractSerializer(typeof(Fraktal));
-            serializer.WriteObject(netStream, myFraktal);
-            netStream.Position = 0;
-
-            Task empfangen = new Task(() =>
-            {
-                Empfangen();
-            });
-            //empfangen.Start();
-            //Ich rufe als Abschluss nun also die Empfangsmethode auf.
-        }
 
         private void Button_Loaded(object sender, RoutedEventArgs e)
         {
@@ -89,7 +98,6 @@ namespace Server
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             //Task t = CalculateTask();
-
         }
 
         /*private async Task CalculateTask()
@@ -140,7 +148,6 @@ namespace Server
                     expeditionClient.Close();
                 }
             }*/
-            
         }
     }
 }

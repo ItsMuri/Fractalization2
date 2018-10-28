@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,9 +16,9 @@ namespace Client
         static void Main(string[] args)
         {
             Console.WriteLine("Awaiting Connection");
-            //AsyncMain().Wait();
+            AsyncMain().Wait();
 
-            Console.ReadLine();
+            Console.ReadKey();
         }
 
         static async Task AsyncMain()
@@ -29,22 +30,44 @@ namespace Client
             {
                 while (true)
                 {
-                    using (var reader = new StreamReader(stream, Encoding.ASCII, true, 4096, leaveOpen: true))
-                    {
-                        int threadid = Thread.CurrentThread.ManagedThreadId;
-                        string answer = reader.ReadLine();
-                        Console.WriteLine(answer);
-                        Console.WriteLine($"Current thread {threadid}: Calculating...");
-                        Thread.Sleep(2000);
-                        
-                        Console.WriteLine($"Current thread {threadid}: Finished");
-                    }
+                    var serializer = new DataContractSerializer(typeof(FraktalClnt));
+                    FraktalClnt fobj = (FraktalClnt)serializer.ReadObject(stream);
 
-                    using (var writer = new StreamWriter(stream, Encoding.ASCII, 4096, leaveOpen: true))
+                    Calculate(fobj, stream);
+                }
+            }
+        }
+
+        private static void Calculate(FraktalClnt fobj, NetworkStream stream)
+        {
+            for (int x = 0; x < fobj.KoordinatenX; x++)
+            {
+                for (int y = 0; y < fobj.KoordinatenY; y++)
+                {
+                    double a = (double)(x - fobj.KoordinatenX / 2) / (double)(fobj.KoordinatenX / 4);
+                    double b = (double)(y - fobj.KoordinatenY / 2) / (double)(fobj.KoordinatenY / 4);
+                    ComplexClnt c = new ComplexClnt(a, b);
+                    ComplexClnt z = new ComplexClnt(0, 0);
+                    int it = 0;
+                    double[] coordinates =
                     {
-                        string msg = "Client 1 finished calculation!";
-                        writer.WriteLine(msg);
-                    }
+                        a, b
+                    };
+
+                    do
+                    {
+                        it++;
+                        z.Square();
+                        z.Add(c);
+
+                        if (z.Magnitude() > 2.0) break;
+
+                        coordinates[0] = a;
+                        coordinates[1] = b;
+                        var ser = new DataContractSerializer(typeof(double));
+                        ser.WriteObject(stream, coordinates);
+
+                    } while (it <= fobj.Iteration);
                 }
             }
         }
