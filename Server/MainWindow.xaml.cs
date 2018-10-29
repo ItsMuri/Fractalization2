@@ -16,9 +16,11 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Color = System.Drawing.Color;
 
 namespace Server
 {
@@ -154,6 +156,54 @@ namespace Server
                 }
             }*/
 
+            Bitmap bm = new Bitmap(Convert.ToInt32(imageFraktal.Width), Convert.ToInt32(imageFraktal.Height));
+
+            for (int x = 0; x < imageFraktal.Width; x++)
+            {
+                for (int y = 0; y < imageFraktal.Height; y++)
+                {
+                    double a = (double) (x - (imageFraktal.Width / 2)) / (double) (imageFraktal.Width / 4);
+                    double b = (double)(y - (imageFraktal.Height / 2)) / (double)(imageFraktal.Height / 4);
+                    Complex c = new Complex(a, b);
+                    Complex z = new Complex(0, 0);
+                    int it = 0;
+                    do
+                    {
+                        it++;
+                        z.Square();
+                        z.Add(c);
+                        if (z.Magnitude() > 2.0)
+                        {
+                            break;
+                        }
+                    } while (it < 100);
+
+                    bm.SetPixel(x, y, it < 100 ? Color.Black : Color.Blue);
+
+                }
+            }
+
+            BitmapImage bmi = BitmapToImageSource(bm);
+
+            imageFraktal.Source = bmi;
+
+
+        }
+
+        BitmapImage BitmapToImageSource(Bitmap bitmap)
+        {
+            using (MemoryStream memory = new MemoryStream())
+            {
+                bitmap.Save(memory, System.Drawing.Imaging.ImageFormat.Bmp);
+                memory.Position = 0;
+                BitmapImage bitmapimage = new BitmapImage();
+                bitmapimage.BeginInit();
+                bitmapimage.StreamSource = memory;
+                bitmapimage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapimage.EndInit();
+
+                return bitmapimage;
+            }
         }
     }
 }
