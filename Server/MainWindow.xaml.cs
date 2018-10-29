@@ -66,6 +66,7 @@ namespace Server
             // Bitmap zum Zeichnen des Fraktals verwenden!
             Bitmap myBitmap = new Bitmap(Convert.ToInt32(imageFraktal.Width),Convert.ToInt32(imageFraktal.Height));
             //Referenz auf Video YT in liked Liste!
+            //Momentan wird das Fraktal in der WindowLoaded Funktion gezeichnet!!!
         }
 
         private void Empfangen()
