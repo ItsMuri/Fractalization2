@@ -34,6 +34,7 @@ namespace Server
         public MainWindow()
         {
             InitializeComponent();
+
             int iterationsCount = Convert.ToInt32(tbIterations.Text);
             Fraktal myFraktal = new Fraktal(iterationsCount);
             double[] xCoordinates = new double[5];
@@ -55,17 +56,61 @@ namespace Server
             //senden.Start();
 
 
+
+
+
             //Zeichnen lassen
             //Vielleicht kann man das mit WriteableBitmap zeichnen lassen...
-            ZeichneFraktal();
 
         }
 
         private void ZeichneFraktal()
         {
             // Bitmap zum Zeichnen des Fraktals verwenden!
-            Bitmap myBitmap = new Bitmap(Convert.ToInt32(imageFraktal.Width),Convert.ToInt32(imageFraktal.Height));
             //Referenz auf Video YT in liked Liste!
+
+
+            int cntInterations = Convert.ToInt32(Dispatcher.Invoke(() => tbIterations.Text));
+
+            
+
+                //Bitmap bm = new Bitmap(return Convert.ToInt32(imageFraktal.Width), Convert.ToInt32(imageFraktal.Height));
+                Bitmap bm = new Bitmap(Convert.ToInt32(imageFraktal.Width),Convert.ToInt32(imageFraktal.Height));
+            
+
+        
+
+        for (int x = 0; x < imageFraktal.Width; x++)
+            {
+                for (int y = 0; y < imageFraktal.Height; y++)
+                {
+                    double a = (double)(x - (imageFraktal.Width / 2)) / (double)(imageFraktal.Width / 4);
+                    double b = (double)(y - (imageFraktal.Height / 2)) / (double)(imageFraktal.Height / 4);
+                    Complex c = new Complex(a, b);
+                    Complex z = new Complex(0, 0);
+                    int it = 0;
+                    do
+                    {
+                        it++;
+                        z.Square();
+                        z.Add(c);
+                        if (z.Magnitude() > 2.0)
+                        {
+                            break;
+                        }
+                    } while (it < cntInterations);
+
+                    //bm.SetPixel(x, y, it < 50 ? Color.Black : Color.Blue);
+                    bm.SetPixel(x, y, it < cntInterations ? Color.Black : Color.Red);
+                    //Mehrere Farben so anzeigen lassen, funktioniert so nicht!!!
+
+                }
+            }
+
+            BitmapImage bmi = BitmapToImageSource(bm);
+
+            imageFraktal.Source = bmi;
+
         }
 
         private void Empfangen()
@@ -104,7 +149,7 @@ namespace Server
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             //Task t = CalculateTask();
-
+            ZeichneFraktal();
         }
 
         /*private async Task CalculateTask()
@@ -156,36 +201,7 @@ namespace Server
                 }
             }*/
 
-            Bitmap bm = new Bitmap(Convert.ToInt32(imageFraktal.Width), Convert.ToInt32(imageFraktal.Height));
-
-            for (int x = 0; x < imageFraktal.Width; x++)
-            {
-                for (int y = 0; y < imageFraktal.Height; y++)
-                {
-                    double a = (double) (x - (imageFraktal.Width / 2)) / (double) (imageFraktal.Width / 4);
-                    double b = (double)(y - (imageFraktal.Height / 2)) / (double)(imageFraktal.Height / 4);
-                    Complex c = new Complex(a, b);
-                    Complex z = new Complex(0, 0);
-                    int it = 0;
-                    do
-                    {
-                        it++;
-                        z.Square();
-                        z.Add(c);
-                        if (z.Magnitude() > 2.0)
-                        {
-                            break;
-                        }
-                    } while (it < 100);
-
-                    bm.SetPixel(x, y, it < 100 ? Color.Black : Color.Blue);
-
-                }
-            }
-
-            BitmapImage bmi = BitmapToImageSource(bm);
-
-            imageFraktal.Source = bmi;
+            
 
 
         }
