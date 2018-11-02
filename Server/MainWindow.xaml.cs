@@ -179,7 +179,7 @@ namespace Server
                         }
                     } while (it < 100);
 
-                    bm.SetPixel(x, y, it < 100 ? Color.Black : Color.Blue);
+                    bm.SetPixel(x, y, it < 100 ? Color.Black : Color.Red);
 
                 }
             }
