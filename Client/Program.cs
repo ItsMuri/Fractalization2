@@ -14,7 +14,10 @@ namespace Client
     {
         static void Main(string[] args)
         {
-            AsyncMain().Wait();
+            Console.WriteLine("Awaiting Connection");
+            //AsyncMain().Wait();
+
+            Console.ReadLine();
         }
 
         static async Task AsyncMain()
