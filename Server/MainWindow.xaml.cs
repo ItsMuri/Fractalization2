@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -14,9 +16,11 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Color = System.Drawing.Color;
 
 namespace Server
 {
@@ -30,9 +34,9 @@ namespace Server
         public MainWindow()
         {
             InitializeComponent();
+
             int iterationsCount = Convert.ToInt32(tbIterations.Text);
-            FraktalSrv myFraktal = new FraktalSrv(iterationsCount);
-            //Koordinaten versenden!
+            Fraktal myFraktal = new Fraktal(iterationsCount);
             double[] xCoordinates = new double[5];
             for (int i = 0; i < 5; i++)
             {
@@ -45,46 +49,93 @@ namespace Server
             ycoordinates[1] = Math.Sqrt(imaginaryNumber);
             myFraktal.KoordinatenY = ycoordinates; //Y Koordinaten gesetzt!
 
-            Task senden = new Task(() => { Senden(myFraktal); });
+            Task senden = new Task(() =>
+            {
+                Senden(myFraktal);
+            });
             //senden.Start();
+
+
+
+
+
+            //Zeichnen lassen
+            //Vielleicht kann man das mit WriteableBitmap zeichnen lassen...
+
         }
 
-
-        private void Senden(FraktalSrv myFraktal)
+        private void ZeichneFraktal()
         {
-            while (true)
+            // Bitmap zum Zeichnen des Fraktals verwenden!
+            //Referenz auf Video YT in liked Liste!
+
+
+            int cntInterations = Convert.ToInt32(Dispatcher.Invoke(() => tbIterations.Text));
+
+            
+
+                //Bitmap bm = new Bitmap(return Convert.ToInt32(imageFraktal.Width), Convert.ToInt32(imageFraktal.Height));
+                Bitmap bm = new Bitmap(Convert.ToInt32(imageFraktal.Width),Convert.ToInt32(imageFraktal.Height));
+            
+
+        
+
+        for (int x = 0; x < imageFraktal.Width; x++)
             {
-                TcpClient tcpClient = listener.AcceptTcpClient();
-
-                //Hier werden nun die Informationen gesendet
-
-                using (NetworkStream netStream = tcpClient.GetStream())
+                for (int y = 0; y < imageFraktal.Height; y++)
                 {
-                    var serializer = new DataContractSerializer(typeof(FraktalSrv));
-                    serializer.WriteObject(netStream, myFraktal);
-                    netStream.Position = 0;
+                    double a = (double)(x - (imageFraktal.Width / 2)) / (double)(imageFraktal.Width / 4);
+                    double b = (double)(y - (imageFraktal.Height / 2)) / (double)(imageFraktal.Height / 4);
+                    Complex c = new Complex(a, b);
+                    Complex z = new Complex(0, 0);
+                    int it = 0;
+                    do
+                    {
+                        it++;
+                        z.Square();
+                        z.Add(c);
+                        if (z.Magnitude() > 2.0)
+                        {
+                            break;
+                        }
+                    } while (it < cntInterations);
 
-                    tcpClient.Client.Shutdown(SocketShutdown.Send);
+                    //bm.SetPixel(x, y, it < 50 ? Color.Black : Color.Blue);
+                    bm.SetPixel(x, y, it < cntInterations ? Color.Black : Color.Red);
+                    //Mehrere Farben so anzeigen lassen, funktioniert so nicht!!!
 
-
-                    var ser = new DataContractSerializer(typeof(FraktalSrv));
-                    FraktalSrv verabeiteteDaten = (FraktalSrv) ser.ReadObject(netStream);
                 }
-
-                //Task empfangen = new Task(() => { Empfangen(); });
-                //empfangen.Start();
-                //Ich rufe als Abschluss nun also die Empfangsmethode auf.
             }
+
+            BitmapImage bmi = BitmapToImageSource(bm);
+
+            imageFraktal.Source = bmi;
+
         }
 
         private void Empfangen()
         {
             //Hier wird dann später empfangen
-            var serializer = new DataContractSerializer(typeof(FraktalSrv));
+            var serializer = new DataContractSerializer(typeof(Fraktal));
             NetworkStream netStream = new NetworkStream(new Socket(SocketType.Stream, ProtocolType.Tcp));
-            FraktalSrv verabeiteteDaten = (FraktalSrv) serializer.ReadObject(netStream);
+            Fraktal verabeiteteDaten = (Fraktal)serializer.ReadObject(netStream);
         }
 
+        private void Senden(Fraktal myFraktal)
+        {
+            //Hier werden nun die Informationen gesendet
+            NetworkStream netStream = new NetworkStream(new Socket(SocketType.Stream, ProtocolType.Tcp));
+            var serializer = new DataContractSerializer(typeof(Fraktal));
+            serializer.WriteObject(netStream, myFraktal);
+            netStream.Position = 0;
+
+            Task empfangen = new Task(() =>
+            {
+                Empfangen();
+            });
+            //empfangen.Start();
+            //Ich rufe als Abschluss nun also die Empfangsmethode auf.
+        }
 
         private void Button_Loaded(object sender, RoutedEventArgs e)
         {
@@ -98,6 +149,7 @@ namespace Server
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             //Task t = CalculateTask();
+            ZeichneFraktal();
         }
 
         /*private async Task CalculateTask()
@@ -148,6 +200,26 @@ namespace Server
                     expeditionClient.Close();
                 }
             }*/
+
+            
+
+
+        }
+
+        BitmapImage BitmapToImageSource(Bitmap bitmap)
+        {
+            using (MemoryStream memory = new MemoryStream())
+            {
+                bitmap.Save(memory, System.Drawing.Imaging.ImageFormat.Bmp);
+                memory.Position = 0;
+                BitmapImage bitmapimage = new BitmapImage();
+                bitmapimage.BeginInit();
+                bitmapimage.StreamSource = memory;
+                bitmapimage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapimage.EndInit();
+
+                return bitmapimage;
+            }
         }
     }
 }
