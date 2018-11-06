@@ -75,6 +75,10 @@ namespace Login
             {
                 refreshToken = credential.Token.RefreshToken;
             }
+
+            Server.MainWindow mainWindow = new Server.MainWindow();
+            mainWindow.Show();
+            this.Close();
         }
     }
 }
