@@ -39,6 +39,8 @@ namespace Client
                 var ser = new DataContractSerializer(typeof(Bitmap));
                 ser.WriteObject(stream, bm);
             }
+
+            client.Close();
         }
 
         private static void Calculate(FraktalClnt fobj, Bitmap bm)
