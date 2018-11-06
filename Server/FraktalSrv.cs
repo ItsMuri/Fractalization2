@@ -21,10 +21,10 @@ namespace Server
         }
 
         [DataMember]
-        public int KoordinatenX { get; set; } //X: -2 bis +2
+        public double KoordinatenX { get; set; } //X: -2 bis +2
 
         [DataMember]
-        public int KoordinatenY { get; set; } //Y: Wurzel aus -1 = i !!! also -i und i werden abgespeichert.
+        public double KoordinatenY { get; set; } //Y: Wurzel aus -1 = i !!! also -i und i werden abgespeichert.
 
         [DataMember]
         public int Iteration { get; set; } //Bei welcher Iteration sind wir???
