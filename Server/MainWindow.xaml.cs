@@ -71,13 +71,16 @@ namespace Server
 
 
             int cntInterations = Convert.ToInt32(Dispatcher.Invoke(() => tbIterations.Text));
-
+            FraktalTask ft = new FraktalTask();
+            // in ft werden die verschiedenen Koordinaten 
             
 
-                //Bitmap bm = new Bitmap(return Convert.ToInt32(imageFraktal.Width), Convert.ToInt32(imageFraktal.Height));
+                //Versuche das Fraktal in 2 Sektoren zu unterteilen!!!
                 Bitmap bm = new Bitmap(Convert.ToInt32(imageFraktal.Width),Convert.ToInt32(imageFraktal.Height));
-            
-
+                Bitmap lowerBm = new Bitmap(Convert.ToInt32(imageFraktal.Width/2), Convert.ToInt32(imageFraktal.Height/2));
+                //Haben jetzt zwei Bereiche, lowerBm ist der untere Bereich der Bitmap
+                //also in diesem Fall 200 x 200 bei einem Original von 400 x 400
+                //Idee: Färbe zuerst die 400 x 400 Fläche und danach die 200 x 200 Fläche
         
 
         for (int x = 0; x < imageFraktal.Width; x++)
@@ -101,16 +104,19 @@ namespace Server
                     } while (it < cntInterations);
 
                     //bm.SetPixel(x, y, it < 50 ? Color.Black : Color.Blue);
-                    bm.SetPixel(x, y, it < cntInterations ? Color.Black : Color.Red);
+                    bm.SetPixel(x, y, it < cntInterations ? Color.Aquamarine : Color.Red);
+                    //lowerBm.SetPixel(x,y, it < cntInterations ? Color.Yellow : Color.Blue);
                     //Mehrere Farben so anzeigen lassen, funktioniert so nicht!!!
 
                 }
             }
+            
+
 
             BitmapImage bmi = BitmapToImageSource(bm);
 
             imageFraktal.Source = bmi;
-
+            
         }
 
         private void Empfangen()
