@@ -22,7 +22,8 @@ namespace Client
 
         static async Task AsyncMain()
         {
-            TcpClient client = new TcpClient(new IPEndPoint(IPAddress.Loopback, 0));
+            var localep = new IPEndPoint(IPAddress.Loopback, 0);
+            TcpClient client = new TcpClient(localep);
             await client.ConnectAsync(IPAddress.Loopback, 5566);
 
             using (NetworkStream stream = client.GetStream())

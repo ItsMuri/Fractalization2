@@ -101,7 +101,7 @@ namespace Server
                     } while (it < cntInterations);
 
                     //bm.SetPixel(x, y, it < 50 ? Color.Black : Color.Blue);
-                    bm.SetPixel(x, y, it < cntInterations ? Color.Black : Color.Red);
+                    bm.SetPixel(x, y, it < cntInterations ? Color.Black : Color.Blue);
                     //Mehrere Farben so anzeigen lassen, funktioniert so nicht!!!
 
                 }
@@ -110,6 +110,8 @@ namespace Server
             BitmapImage bmi = BitmapToImageSource(bm);
 
             imageFraktal.Source = bmi;
+
+            MessageBox.Show("Fertig!");
 
         }
 
@@ -148,11 +150,12 @@ namespace Server
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            //Task t = CalculateTask();
+            Task t = CalculateTask();
+            
             ZeichneFraktal();
         }
 
-        /*private async Task CalculateTask()
+        private async Task CalculateTask()
         {
             while (true)
             {
@@ -177,14 +180,14 @@ namespace Server
                     }
                 }
             }
-        }*/
+        }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             //Dieser Code wird erst verwendet wenn wir erste Testclients haben!
 
-            /*
-            int countAvailablePcS = 0;
+            
+           /* int countAvailablePcS = 0;
             string[] availablePcS = new string[100];
             bool isOn;
             TcpClient expeditionClient = new TcpClient();
@@ -199,8 +202,8 @@ namespace Server
                     labelComputerAvailable.Content = countAvailablePcS;
                     expeditionClient.Close();
                 }
-            }*/
-
+            }
+            */
             
 
 
