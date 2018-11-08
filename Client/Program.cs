@@ -18,7 +18,7 @@ namespace Client
         static void Main(string[] args)
         {
             Console.WriteLine("Awaiting Connection");
-            AsyncMain().Wait();
+            //AsyncMain().Wait();
 
             Console.ReadKey();
         }
@@ -46,12 +46,12 @@ namespace Client
 
         private static void Calculate(FraktalClnt fobj, Bitmap bm)
         {
-            for (int x = 0; x < fobj.KoordinatenX; x++)
+            for (int x = 0; x < 400; x++)
             {
-                for (int y = 0; y < fobj.KoordinatenY; y++)
+                for (int y = 0; y < 400; y++)
                 {
-                    double a = (double) (x - fobj.KoordinatenX / 2) / (double) (fobj.KoordinatenX / 4);
-                    double b = (double) (y - fobj.KoordinatenY / 2) / (double) (fobj.KoordinatenY / 4);
+                    double a = (double) (x - 400 / 2) / (double) (400 / 4);
+                    double b = (double) (y - 400 / 2) / (double) (400 / 4);
                     ComplexClnt c = new ComplexClnt(a, b);
                     ComplexClnt z = new ComplexClnt(0, 0);
                     int it = 0;

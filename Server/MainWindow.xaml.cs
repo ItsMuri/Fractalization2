@@ -51,12 +51,7 @@ namespace Server
             myFraktal.KoordinatenY = ycoordinates; //Y Koordinaten gesetzt!
             */
 
-            /*Task senden = new Task(() =>
-            {
-                Senden(myFraktal);
-            });
-            */
-            //senden.Start();
+            
 
 
 
@@ -129,7 +124,8 @@ namespace Server
         private void Senden(FraktalSrv myFraktal)
         {
             //Hier werden nun die Informationen gesendet
-            NetworkStream netStream = new NetworkStream(new Socket(SocketType.Stream, ProtocolType.Tcp));
+            Socket mySocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            NetworkStream netStream = new NetworkStream(mySocket);
             var serializer = new DataContractSerializer(typeof(FraktalSrv));
             serializer.WriteObject(netStream, myFraktal);
             netStream.Position = 0;
@@ -155,7 +151,16 @@ namespace Server
         {
             Task t = CalculateTask();
             
-            ZeichneFraktal();
+            //ZeichneFraktal();
+
+            FraktalSrv myFraktalSrv = new FraktalSrv(Convert.ToInt32(tbIterations.Text));
+            /*Task senden = new Task(() =>
+            {
+                Senden(myFraktal);
+            });
+            */
+            //senden.Start();
+            Senden(myFraktalSrv);
         }
 
         private async Task CalculateTask()
