@@ -74,16 +74,13 @@ namespace Server
 
 
             int cntInterations = Convert.ToInt32(Dispatcher.Invoke(() => tbIterations.Text));
-            FraktalTask ft = new FraktalTask();
-            // in ft werden die verschiedenen Koordinaten 
+
             
 
-                //Versuche das Fraktal in 2 Sektoren zu unterteilen!!!
+                //Bitmap bm = new Bitmap(return Convert.ToInt32(imageFraktal.Width), Convert.ToInt32(imageFraktal.Height));
                 Bitmap bm = new Bitmap(Convert.ToInt32(imageFraktal.Width),Convert.ToInt32(imageFraktal.Height));
-                Bitmap lowerBm = new Bitmap(Convert.ToInt32(imageFraktal.Width/2), Convert.ToInt32(imageFraktal.Height/2));
-                //Haben jetzt zwei Bereiche, lowerBm ist der untere Bereich der Bitmap
-                //also in diesem Fall 200 x 200 bei einem Original von 400 x 400
-                //Idee: Färbe zuerst die 400 x 400 Fläche und danach die 200 x 200 Fläche
+            
+
         
 
         for (int x = 0; x < imageFraktal.Width; x++)
@@ -107,19 +104,18 @@ namespace Server
                     } while (it < cntInterations);
 
                     //bm.SetPixel(x, y, it < 50 ? Color.Black : Color.Blue);
-                    bm.SetPixel(x, y, it < cntInterations ? Color.Aquamarine : Color.Red);
-                    //lowerBm.SetPixel(x,y, it < cntInterations ? Color.Yellow : Color.Blue);
+                    bm.SetPixel(x, y, it < cntInterations ? Color.Black : Color.Blue);
                     //Mehrere Farben so anzeigen lassen, funktioniert so nicht!!!
 
                 }
             }
-            
-
 
             BitmapImage bmi = BitmapToImageSource(bm);
 
             imageFraktal.Source = bmi;
-            
+
+            MessageBox.Show("Fertig!");
+
         }
 
         private void Empfangen()
@@ -157,11 +153,12 @@ namespace Server
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            //Task t = CalculateTask();
+            Task t = CalculateTask();
+            
             ZeichneFraktal();
         }
 
-        /*private async Task CalculateTask()
+        private async Task CalculateTask()
         {
             while (true)
             {
@@ -186,14 +183,14 @@ namespace Server
                     }
                 }
             }
-        }*/
+        }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             //Dieser Code wird erst verwendet wenn wir erste Testclients haben!
 
-            /*
-            int countAvailablePcS = 0;
+            
+           /* int countAvailablePcS = 0;
             string[] availablePcS = new string[100];
             bool isOn;
             TcpClient expeditionClient = new TcpClient();
@@ -208,8 +205,8 @@ namespace Server
                     labelComputerAvailable.Content = countAvailablePcS;
                     expeditionClient.Close();
                 }
-            }*/
-
+            }
+            */
             
 
 
