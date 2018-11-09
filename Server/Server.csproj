@@ -94,7 +94,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Complex.cs" />
-    <Compile Include="Fraktal.cs" />
+    <Compile Include="FraktalSrv.cs" />
     <Compile Include="FraktalTask.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
