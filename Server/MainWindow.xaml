@@ -17,7 +17,7 @@
         <Button x:Name="btnCalculate" Content="Calculate" HorizontalAlignment="Left" Margin="66.455,274,0,0" VerticalAlignment="Top" Width="110" Height="45" Click="Button_Click" Loaded="Button_Loaded" Grid.Column="1"/>
         <Slider HorizontalAlignment="Left" Margin="61.455,368,0,0" VerticalAlignment="Top" Width="115" Grid.Column="1"/>
         <Label x:Name="labelComputerAvailable" Content="counter" Grid.Column="1" HorizontalAlignment="Left" Margin="91,41,0,0" VerticalAlignment="Top" Height="47" Width="75"/>
-        <Image x:Name="imageFraktal" HorizontalAlignment="left" Height="700" Margin="200,0,0,0" VerticalAlignment="Top" Width="700" />
+        <Image x:Name="imageFraktal" HorizontalAlignment="left" Height="700" Margin="202,0,0,128" VerticalAlignment="Bottom" Width="700" />
 
     </Grid>
 </Window>

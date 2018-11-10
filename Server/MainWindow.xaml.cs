@@ -151,7 +151,7 @@ namespace Server
         {
             Task t = CalculateTask();
             
-            //ZeichneFraktal();
+            ZeichneFraktal();
 
             FraktalSrv myFraktalSrv = new FraktalSrv(Convert.ToInt32(tbIterations.Text));
             /*Task senden = new Task(() =>
@@ -160,7 +160,7 @@ namespace Server
             });
             */
             //senden.Start();
-            Senden(myFraktalSrv);
+            //Senden(myFraktalSrv);
         }
 
         private async Task CalculateTask()
