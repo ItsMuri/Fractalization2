@@ -32,22 +32,25 @@ namespace Client
         {
             TcpListener myListener = new TcpListener(IPAddress.Loopback, 5566);
             myListener.Start();
-            TcpClient client = myListener.AcceptTcpClient();
-            
-
-            using (NetworkStream stream = client.GetStream())
+            while (true)
             {
-                var serializer = new DataContractSerializer(typeof(PropsOfFractal));
-                PropsOfFractal fobj = (PropsOfFractal)serializer.ReadObject(stream);
+                TcpClient client = myListener.AcceptTcpClient();
 
-                Bitmap bm = new Bitmap(400, 400);
-                Calculate(fobj, ref bm);
 
-                var ser = new DataContractSerializer(typeof(Bitmap));
-                ser.WriteObject(stream, bm);
+                using (NetworkStream stream = client.GetStream())
+                {
+                    var serializer = new DataContractSerializer(typeof(PropsOfFractal));
+                    PropsOfFractal fobj = (PropsOfFractal) serializer.ReadObject(stream);
+
+                    Bitmap bm = new Bitmap(400, 400);
+                    Calculate(fobj, ref bm);
+
+                    var ser = new DataContractSerializer(typeof(Bitmap));
+                    ser.WriteObject(stream, bm);
+                }
+
+                client.Close();
             }
-
-            client.Close();
         }
 
         private static void Calculate(PropsOfFractal fobj, ref Bitmap bm)
