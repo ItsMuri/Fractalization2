@@ -10,6 +10,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using SerializedFraktal;
+//using Server;
 
 namespace Client
 {
@@ -18,23 +20,28 @@ namespace Client
         static void Main(string[] args)
         {
             Console.WriteLine("Awaiting Connection");
-            AsyncMain().Wait();
+            //AsyncMain().Start();
+            //AsyncMain().Wait();
+            AsyncMain();
 
             Console.ReadKey();
         }
 
-        static async Task AsyncMain()
+        //static async Task AsyncMain()
+        private static void AsyncMain()
         {
-            TcpClient client = new TcpClient(new IPEndPoint(IPAddress.Loopback, 0));
-            await client.ConnectAsync(IPAddress.Loopback, 5566);
+            TcpListener myListener = new TcpListener(IPAddress.Loopback, 5566);
+            myListener.Start();
+            TcpClient client = myListener.AcceptTcpClient();
+            
 
             using (NetworkStream stream = client.GetStream())
             {
-                var serializer = new DataContractSerializer(typeof(FraktalClnt));
-                FraktalClnt fobj = (FraktalClnt) serializer.ReadObject(stream);
+                var serializer = new DataContractSerializer(typeof(PropsOfFractal));
+                PropsOfFractal fobj = (PropsOfFractal)serializer.ReadObject(stream);
 
                 Bitmap bm = new Bitmap(400, 400);
-                Calculate(fobj, bm);
+                Calculate(fobj, ref bm);
 
                 var ser = new DataContractSerializer(typeof(Bitmap));
                 ser.WriteObject(stream, bm);
@@ -43,14 +50,14 @@ namespace Client
             client.Close();
         }
 
-        private static void Calculate(FraktalClnt fobj, Bitmap bm)
+        private static void Calculate(PropsOfFractal fobj, ref Bitmap bm)
         {
-            for (int x = 0; x < fobj.KoordinatenX; x++)
+            for (int x = 0; x < fobj.imgWidth; x++)
             {
-                for (int y = 0; y < fobj.KoordinatenY; y++)
+                for (int y = 0; y < fobj.imgHeight; y++)
                 {
-                    double a = (double) (x - fobj.KoordinatenX / 2) / (double) (fobj.KoordinatenX / 4);
-                    double b = (double) (y - fobj.KoordinatenY / 2) / (double) (fobj.KoordinatenY / 4);
+                    double a = (double) (x - fobj.imgWidth / 2) / (double) (fobj.imgWidth / 4);
+                    double b = (double) (y - fobj.imgHeight / 2) / (double) (fobj.imgHeight / 4);
                     ComplexClnt c = new ComplexClnt(a, b);
                     ComplexClnt z = new ComplexClnt(0, 0);
                     int it = 0;
@@ -65,13 +72,13 @@ namespace Client
                         z.Square();
                         z.Add(c);
 
-                        if (z.Magnitude() > 2.0) break;
+                        if (z.Magnitude() > 2.0) { break;}
 
                         //coordinates[0] = a;
                         //coordinates[1] = b;
-                    } while (it <= fobj.Iteration);
-
-                    bm.SetPixel(x, y, it < fobj.Iteration ? Color.Black : Color.Red);
+                    } while (it <= fobj.IterationsCount);
+                    //Console.WriteLine($"{x}:{y}:{it}");
+                    bm.SetPixel(x, y, it < fobj.IterationsCount ? Color.Red : Color.Blue);
 
                 }
             }

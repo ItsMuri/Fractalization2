@@ -20,6 +20,7 @@ using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using SerializedFraktal;
 using Color = System.Drawing.Color;
 
 namespace Server
@@ -29,36 +30,12 @@ namespace Server
     /// </summary>
     public partial class MainWindow : Window
     {
-        private TcpListener listener;
+        //private TcpListener listener;
 
         public MainWindow()
         {
             InitializeComponent();
-
-            int iterationsCount = Convert.ToInt32(tbIterations.Text);
-            FraktalSrv myFraktal = new FraktalSrv(iterationsCount);
-            double[] xCoordinates = new double[5];
-            for (int i = 0; i < 5; i++)
-            {
-                xCoordinates[i] = -2.0 + i;
-            }
-            myFraktal.KoordinatenX = xCoordinates; //X Koordinaten gesetzt!
-            double[] ycoordinates = new double[2];
-            double imaginaryNumber = Math.Sqrt(-1);
-            ycoordinates[0] = Math.Sqrt(-imaginaryNumber);
-            ycoordinates[1] = Math.Sqrt(imaginaryNumber);
-            myFraktal.KoordinatenY = ycoordinates; //Y Koordinaten gesetzt!
-
-            Task senden = new Task(() =>
-            {
-                Senden(myFraktal);
-            });
-            //senden.Start();
-
-
-
-
-
+            
             //Zeichnen lassen
             //Vielleicht kann man das mit WriteableBitmap zeichnen lassen...
 
@@ -119,43 +96,88 @@ namespace Server
             
         }
 
-        private void Empfangen()
+        /*
+        private Task Empfangen()
         {
             //Hier wird dann später empfangen
-            var serializer = new DataContractSerializer(typeof(FraktalSrv));
-            NetworkStream netStream = new NetworkStream(new Socket(SocketType.Stream, ProtocolType.Tcp));
-            FraktalSrv verabeiteteDaten = (FraktalSrv)serializer.ReadObject(netStream);
+            
         }
+        */
 
-        private void Senden(FraktalSrv myFraktal)
+        private void Senden(PropsOfFractal myFraktal)
         {
             //Hier werden nun die Informationen gesendet
-            NetworkStream netStream = new NetworkStream(new Socket(SocketType.Stream, ProtocolType.Tcp));
-            var serializer = new DataContractSerializer(typeof(FraktalSrv));
+            TcpClient mySender = new TcpClient();
+            mySender.Connect(IPAddress.Loopback,5566);
+            NetworkStream netStream = mySender.GetStream();
+            var serializer = new DataContractSerializer(typeof(PropsOfFractal));
             serializer.WriteObject(netStream, myFraktal);
-            netStream.Position = 0;
+            mySender.Client.Shutdown(SocketShutdown.Send);
+            var BitmSerializer = new DataContractSerializer(typeof(Bitmap));
+            Bitmap verabeiteteDaten = (Bitmap)BitmSerializer.ReadObject(netStream);
+            netStream.Close();
+            mySender.Close();
 
+            FraktalAnzeigen(verabeiteteDaten);
+
+            /*
             Task empfangen = new Task(() =>
             {
-                Empfangen();
+                //var serializer = new DataContractSerializer(typeof(FraktalSrv));
+
+                //NetworkStream netStream = new NetworkStream(new Socket(SocketType.Stream, ProtocolType.Tcp));
             });
-            //empfangen.Start();
+            empfangen.Start();
+            */
+
             //Ich rufe als Abschluss nun also die Empfangsmethode auf.
         }
 
-        private void Button_Loaded(object sender, RoutedEventArgs e)
+        private void FraktalAnzeigen(Bitmap verabeiteteDaten)
+        {
+            //BitmapImage bmi = BitmapToImageSource(verabeiteteDaten);
+            imageFraktal.Dispatcher.Invoke(() => imageFraktal.Source = BitmapToImageSource(verabeiteteDaten));
+        }
+
+        /*private void Button_Loaded(object sender, RoutedEventArgs e)
         {
             Task.Run(() =>
             {
                 listener = new TcpListener(IPAddress.Loopback, 5566);
                 listener.Start();
             });
-        }
+        }*/
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             //Task t = CalculateTask();
-            ZeichneFraktal();
+            //ZeichneFraktal();
+
+
+            int iterationsCount = Convert.ToInt32(tbIterations.Text);
+            SerializedFraktal.PropsOfFractal myFraktal = new PropsOfFractal(iterationsCount);
+            myFraktal.imgWidth = imageFraktal.Width;
+            myFraktal.imgHeight = imageFraktal.Height;
+            //FraktalSrv myFraktal = new FraktalSrv(iterationsCount);
+            
+            /*double[] xCoordinates = new double[5];
+            for (int i = 0; i < 5; i++)
+            {
+                xCoordinates[i] = -2.0 + i;
+            }
+            myFraktal.KoordinatenX = xCoordinates; //X Koordinaten gesetzt!
+            double[] ycoordinates = new double[2];
+            double imaginaryNumber = Math.Sqrt(-1);
+            ycoordinates[0] = Math.Sqrt(-imaginaryNumber);
+            ycoordinates[1] = Math.Sqrt(imaginaryNumber);
+            myFraktal.KoordinatenY = ycoordinates; //Y Koordinaten gesetzt!
+            */
+
+            Task senden = new Task(() =>
+            {
+                Senden(myFraktal);
+            });
+            senden.Start();
         }
 
         /*private async Task CalculateTask()
