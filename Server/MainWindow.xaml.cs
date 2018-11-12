@@ -35,6 +35,8 @@ namespace Server
         {
             InitializeComponent();
 
+            
+
             int iterationsCount = Convert.ToInt32(tbIterations.Text);
             FraktalSrv myFraktal = new FraktalSrv(iterationsCount);
             //double[] xCoordinates = new double[5];
@@ -69,7 +71,6 @@ namespace Server
             //Bitmap bm = new Bitmap(return Convert.ToInt32(imageFraktal.Width), Convert.ToInt32(imageFraktal.Height));
             Bitmap bm = new Bitmap(Convert.ToInt32(imageFraktal.Width), Convert.ToInt32(imageFraktal.Height));
 
-
             for (int x = 0; x < imageFraktal.Width; x++)
             {
                 for (int y = 0; y < imageFraktal.Height; y++)
@@ -91,7 +92,7 @@ namespace Server
                     } while (it < cntInterations);
 
                     //bm.SetPixel(x, y, it < 50 ? Color.Black : Color.Blue);
-                    bm.SetPixel(x, y, it < cntInterations ? Color.Black : Color.Red);
+                    bm.SetPixel(x, y, it < cntInterations ? Color.Black : Color.Aquamarine);
                     //Mehrere Farben so anzeigen lassen, funktioniert so nicht!!!
                 }
             }
@@ -201,6 +202,12 @@ namespace Server
 
                 return bitmapimage;
             }
+        }
+
+        private void MainWindow_OnMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if(e.LeftButton == MouseButtonState.Pressed)
+                DragMove();
         }
     }
 }
