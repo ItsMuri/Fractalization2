@@ -18,7 +18,7 @@ namespace Client
         static void Main(string[] args)
         {
             Console.WriteLine("Awaiting Connection");
-            AsyncMain().Wait();
+           // AsyncMain().Wait();
 
             Console.ReadKey();
         }

@@ -36,7 +36,7 @@ namespace Server
             InitializeComponent();
 
             int iterationsCount = Convert.ToInt32(tbIterations.Text);
-            Fraktal myFraktal = new Fraktal(iterationsCount);
+            FraktalSrv myFraktal = new FraktalSrv(iterationsCount);
             double[] xCoordinates = new double[5];
             for (int i = 0; i < 5; i++)
             {
@@ -118,16 +118,16 @@ namespace Server
         private void Empfangen()
         {
             //Hier wird dann später empfangen
-            var serializer = new DataContractSerializer(typeof(Fraktal));
+            var serializer = new DataContractSerializer(typeof(FraktalSrv));
             NetworkStream netStream = new NetworkStream(new Socket(SocketType.Stream, ProtocolType.Tcp));
-            Fraktal verabeiteteDaten = (Fraktal)serializer.ReadObject(netStream);
+            FraktalSrv verabeiteteDaten = (FraktalSrv)serializer.ReadObject(netStream);
         }
 
-        private void Senden(Fraktal myFraktal)
+        private void Senden(FraktalSrv myFraktal)
         {
             //Hier werden nun die Informationen gesendet
             NetworkStream netStream = new NetworkStream(new Socket(SocketType.Stream, ProtocolType.Tcp));
-            var serializer = new DataContractSerializer(typeof(Fraktal));
+            var serializer = new DataContractSerializer(typeof(FraktalSrv));
             serializer.WriteObject(netStream, myFraktal);
             netStream.Position = 0;
 
@@ -224,5 +224,6 @@ namespace Server
                 return bitmapimage;
             }
         }
+
     }
 }
