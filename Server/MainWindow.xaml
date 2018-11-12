@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Server"
         mc:Ignorable="d"
-        Title="MainWindow" Height="900" Width="1200" Loaded="Window_Loaded" WindowState="Maximized">
+        Title="MainWindow" Height="623.95" Width="950" Loaded="Window_Loaded">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="101*"/>
@@ -14,10 +14,11 @@
         <Label Content="Computer(s) available:" HorizontalAlignment="Left" Margin="61.455,10,0,0" VerticalAlignment="Top" Grid.Column="1"/>
         <Label Content="Iterations:" HorizontalAlignment="Left" Margin="29.455,182,0,0" VerticalAlignment="Top" Grid.Column="1"/>
         <TextBox x:Name="tbIterations" HorizontalAlignment="Left" Height="20" Margin="91.455,186,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="85" Grid.Column="1" Text="100"/>
-        <Button x:Name="btnCalculate" Content="Calculate" HorizontalAlignment="Left" Margin="66.455,274,0,0" VerticalAlignment="Top" Width="110" Height="45" Click="Button_Click" Loaded="Button_Loaded" Grid.Column="1"/>
+        <Canvas x:Name="canvasDraw" HorizontalAlignment="Left" Height="113" Margin="10,10,0,0" VerticalAlignment="Top" Width="586" Background="Blue"/>
+        <Button x:Name="btnCalculate" Content="Calculate" HorizontalAlignment="Left" Margin="66.455,274,0,0" VerticalAlignment="Top" Width="110" Height="45" Click="Button_Click" Grid.Column="1"/>
         <Slider HorizontalAlignment="Left" Margin="61.455,368,0,0" VerticalAlignment="Top" Width="115" Grid.Column="1"/>
         <Label x:Name="labelComputerAvailable" Content="counter" Grid.Column="1" HorizontalAlignment="Left" Margin="91,41,0,0" VerticalAlignment="Top" Height="47" Width="75"/>
-        <Image x:Name="imageFraktal" HorizontalAlignment="left" Height="700" Margin="200,0,0,0" VerticalAlignment="Top" Width="700" />
+        <Image x:Name="imageFraktal" HorizontalAlignment="Left" Height="400" Margin="10,149,0,-130" VerticalAlignment="Top" Width="400"/>
 
     </Grid>
 </Window>
