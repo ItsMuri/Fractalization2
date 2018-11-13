@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using SerializedFraktal;
+
 //using Server;
 
 namespace Client
@@ -19,7 +20,7 @@ namespace Client
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Awaiting Connection");
+            Console.ReadKey();
             //AsyncMain().Start();
             //AsyncMain().Wait();
             AsyncMain();
@@ -30,11 +31,15 @@ namespace Client
         //static async Task AsyncMain()
         private static void AsyncMain()
         {
-            TcpListener myListener = new TcpListener(IPAddress.Loopback, 5566);
-            myListener.Start();
-            while (true)
-            {
-                TcpClient client = myListener.AcceptTcpClient();
+            //TcpListener myListener = new TcpListener(IPAddress.Loopback, 5566);
+            //myListener.Start();
+            TcpClient client = new TcpClient(new IPEndPoint(IPAddress.Any, 0));
+            client.Connect(IPAddress.Loopback, 5566);
+            Console.WriteLine("Connected");
+
+            //while (true)
+            //{
+                //TcpClient client = client.AcceptTcpClient();
 
 
                 using (NetworkStream stream = client.GetStream())
@@ -42,7 +47,7 @@ namespace Client
                     var serializer = new DataContractSerializer(typeof(PropsOfFractal));
                     PropsOfFractal fobj = (PropsOfFractal) serializer.ReadObject(stream);
 
-                    Bitmap bm = new Bitmap(400, 400);
+                    Bitmap bm = new Bitmap(Convert.ToInt32(fobj.imgWidth), Convert.ToInt32(fobj.imgHeight));
                     Calculate(fobj, ref bm);
 
                     var ser = new DataContractSerializer(typeof(Bitmap));
@@ -50,7 +55,7 @@ namespace Client
                 }
 
                 client.Close();
-            }
+            //}
         }
 
         private static void Calculate(PropsOfFractal fobj, ref Bitmap bm)
@@ -75,14 +80,16 @@ namespace Client
                         z.Square();
                         z.Add(c);
 
-                        if (z.Magnitude() > 2.0) { break;}
+                        if (z.Magnitude() > 2.0)
+                        {
+                            break;
+                        }
 
                         //coordinates[0] = a;
                         //coordinates[1] = b;
                     } while (it <= fobj.IterationsCount);
                     //Console.WriteLine($"{x}:{y}:{it}");
                     bm.SetPixel(x, y, it < fobj.IterationsCount ? Color.Red : Color.Blue);
-
                 }
             }
         }

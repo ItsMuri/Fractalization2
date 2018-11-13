@@ -35,10 +35,9 @@ namespace Server
         public MainWindow()
         {
             InitializeComponent();
-            
+
             //Zeichnen lassen
             //Vielleicht kann man das mit WriteableBitmap zeichnen lassen...
-
         }
 
         private void ZeichneFraktal()
@@ -50,22 +49,23 @@ namespace Server
             int cntInterations = Convert.ToInt32(Dispatcher.Invoke(() => tbIterations.Text));
             FraktalTask ft = new FraktalTask();
             // in ft werden die verschiedenen Koordinaten 
-            
 
-                //Versuche das Fraktal in 2 Sektoren zu unterteilen!!!
-                Bitmap bm = new Bitmap(Convert.ToInt32(imageFraktal.Width),Convert.ToInt32(imageFraktal.Height));
-                Bitmap lowerBm = new Bitmap(Convert.ToInt32(imageFraktal.Width/2), Convert.ToInt32(imageFraktal.Height/2));
-                //Haben jetzt zwei Bereiche, lowerBm ist der untere Bereich der Bitmap
-                //also in diesem Fall 200 x 200 bei einem Original von 400 x 400
-                //Idee: Färbe zuerst die 400 x 400 Fläche und danach die 200 x 200 Fläche
-        
 
-        for (int x = 0; x < imageFraktal.Width; x++)
+            //Versuche das Fraktal in 2 Sektoren zu unterteilen!!!
+            Bitmap bm = new Bitmap(Convert.ToInt32(imageFraktal.Width), Convert.ToInt32(imageFraktal.Height));
+            Bitmap lowerBm = new Bitmap(Convert.ToInt32(imageFraktal.Width / 2),
+                Convert.ToInt32(imageFraktal.Height / 2));
+            //Haben jetzt zwei Bereiche, lowerBm ist der untere Bereich der Bitmap
+            //also in diesem Fall 200 x 200 bei einem Original von 400 x 400
+            //Idee: Färbe zuerst die 400 x 400 Fläche und danach die 200 x 200 Fläche
+
+
+            for (int x = 0; x < imageFraktal.Width / 2; x++)
             {
                 for (int y = 0; y < imageFraktal.Height; y++)
                 {
-                    double a = (double)(x - (imageFraktal.Width / 2)) / (double)(imageFraktal.Width / 4);
-                    double b = (double)(y - (imageFraktal.Height / 2)) / (double)(imageFraktal.Height / 4);
+                    double a = (double) (x - (imageFraktal.Width / 2)) / (double) (imageFraktal.Width / 4);
+                    double b = (double) (y - (imageFraktal.Height / 2)) / (double) (imageFraktal.Height / 4);
                     Complex c = new Complex(a, b);
                     Complex z = new Complex(0, 0);
                     int it = 0;
@@ -84,16 +84,40 @@ namespace Server
                     bm.SetPixel(x, y, it < cntInterations ? Color.Aquamarine : Color.Red);
                     //lowerBm.SetPixel(x,y, it < cntInterations ? Color.Yellow : Color.Blue);
                     //Mehrere Farben so anzeigen lassen, funktioniert so nicht!!!
-
                 }
             }
-            
 
 
-            BitmapImage bmi = BitmapToImageSource(bm);
+            imageFraktal.Source = BitmapToImageSource(bm);
 
-            imageFraktal.Source = bmi;
-            
+            for (double x = imageFraktal.Width / 2; x < imageFraktal.Width; x++)
+            {
+                for (int y = 0; y < imageFraktal.Height; y++)
+                {
+                    double a = (double) (x - (imageFraktal.Width / 2)) / (double) (imageFraktal.Width / 4);
+                    double b = (double) (y - (imageFraktal.Height / 2)) / (double) (imageFraktal.Height / 4);
+                    Complex c = new Complex(a, b);
+                    Complex z = new Complex(0, 0);
+                    int it = 0;
+                    do
+                    {
+                        it++;
+                        z.Square();
+                        z.Add(c);
+                        if (z.Magnitude() > 2.0)
+                        {
+                            break;
+                        }
+                    } while (it < cntInterations);
+
+                    //bm.SetPixel(x, y, it < 50 ? Color.Black : Color.Blue);
+                    bm.SetPixel(Convert.ToInt32(x), y, it < cntInterations ? Color.Aquamarine : Color.Red);
+                    //lowerBm.SetPixel(x,y, it < cntInterations ? Color.Yellow : Color.Blue);
+                    //Mehrere Farben so anzeigen lassen, funktioniert so nicht!!!
+                }
+            }
+
+            imageFraktal.Source = BitmapToImageSource(bm);
         }
 
         /*
@@ -107,14 +131,22 @@ namespace Server
         private void Senden(PropsOfFractal myFraktal)
         {
             //Hier werden nun die Informationen gesendet
-            TcpClient mySender = new TcpClient();
-            mySender.Connect(IPAddress.Loopback,5566);
+            //TcpClient mySender = new TcpClient();
+            //mySender.Connect(IPAddress.Loopback, 5566);
+            TcpListener listener = new TcpListener(IPAddress.Loopback, 5566);
+            listener.Start();
+
+            var mySender = listener.AcceptTcpClient();
+
             NetworkStream netStream = mySender.GetStream();
             var serializer = new DataContractSerializer(typeof(PropsOfFractal));
             serializer.WriteObject(netStream, myFraktal);
+
             mySender.Client.Shutdown(SocketShutdown.Send);
-            var BitmSerializer = new DataContractSerializer(typeof(Bitmap));
-            Bitmap verabeiteteDaten = (Bitmap)BitmSerializer.ReadObject(netStream);
+
+            var bitmSerializer = new DataContractSerializer(typeof(Bitmap));
+            Bitmap verabeiteteDaten = (Bitmap) bitmSerializer.ReadObject(netStream);
+
             netStream.Close();
             mySender.Close();
 
@@ -155,11 +187,11 @@ namespace Server
 
 
             int iterationsCount = Convert.ToInt32(tbIterations.Text);
-            SerializedFraktal.PropsOfFractal myFraktal = new PropsOfFractal(iterationsCount);
+            PropsOfFractal myFraktal = new PropsOfFractal(iterationsCount);
             myFraktal.imgWidth = imageFraktal.Width;
             myFraktal.imgHeight = imageFraktal.Height;
             //FraktalSrv myFraktal = new FraktalSrv(iterationsCount);
-            
+
             /*double[] xCoordinates = new double[5];
             for (int i = 0; i < 5; i++)
             {
@@ -176,6 +208,7 @@ namespace Server
             Task senden = new Task(() =>
             {
                 Senden(myFraktal);
+                //ZeichneFraktal();
             });
             senden.Start();
         }
@@ -228,10 +261,6 @@ namespace Server
                     expeditionClient.Close();
                 }
             }*/
-
-            
-
-
         }
 
         BitmapImage BitmapToImageSource(Bitmap bitmap)
