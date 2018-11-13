@@ -136,21 +136,27 @@ namespace Server
             TcpListener listener = new TcpListener(IPAddress.Loopback, 5566);
             listener.Start();
 
-            var mySender = listener.AcceptTcpClient();
+            while (true)
+            {
+                var mySender = listener.AcceptTcpClient();
 
-            NetworkStream netStream = mySender.GetStream();
-            var serializer = new DataContractSerializer(typeof(PropsOfFractal));
-            serializer.WriteObject(netStream, myFraktal);
+                myFraktal.ID += 1;
 
-            mySender.Client.Shutdown(SocketShutdown.Send);
+                NetworkStream netStream = mySender.GetStream();
+                var serializer = new DataContractSerializer(typeof(PropsOfFractal));
+                serializer.WriteObject(netStream, myFraktal);
 
-            var bitmSerializer = new DataContractSerializer(typeof(Bitmap));
-            Bitmap verabeiteteDaten = (Bitmap) bitmSerializer.ReadObject(netStream);
+                mySender.Client.Shutdown(SocketShutdown.Send);
 
-            netStream.Close();
-            mySender.Close();
+                var bitmSerializer = new DataContractSerializer(typeof(Bitmap));
+                Bitmap verabeiteteDaten = (Bitmap) bitmSerializer.ReadObject(netStream);
 
-            FraktalAnzeigen(verabeiteteDaten);
+                netStream.Close();
+                mySender.Close();
+
+                FraktalAnzeigen(verabeiteteDaten);
+            }
+
 
             /*
             Task empfangen = new Task(() =>

@@ -20,7 +20,6 @@ namespace Client
     {
         static void Main(string[] args)
         {
-            Console.ReadKey();
             //AsyncMain().Start();
             //AsyncMain().Wait();
             AsyncMain();
@@ -39,57 +38,97 @@ namespace Client
 
             //while (true)
             //{
-                //TcpClient client = client.AcceptTcpClient();
+            //TcpClient client = client.AcceptTcpClient();
 
 
-                using (NetworkStream stream = client.GetStream())
-                {
-                    var serializer = new DataContractSerializer(typeof(PropsOfFractal));
-                    PropsOfFractal fobj = (PropsOfFractal) serializer.ReadObject(stream);
+            using (NetworkStream stream = client.GetStream())
+            {
+                var serializer = new DataContractSerializer(typeof(PropsOfFractal));
+                PropsOfFractal fobj = (PropsOfFractal) serializer.ReadObject(stream);
 
-                    Bitmap bm = new Bitmap(Convert.ToInt32(fobj.imgWidth), Convert.ToInt32(fobj.imgHeight));
-                    Calculate(fobj, ref bm);
+                Bitmap bm = new Bitmap(Convert.ToInt32(fobj.imgWidth), Convert.ToInt32(fobj.imgHeight));
+                Calculate(fobj, ref bm);
 
-                    var ser = new DataContractSerializer(typeof(Bitmap));
-                    ser.WriteObject(stream, bm);
-                }
+                var ser = new DataContractSerializer(typeof(Bitmap));
+                ser.WriteObject(stream, bm);
+            }
 
-                client.Close();
+            client.Close();
             //}
         }
 
         private static void Calculate(PropsOfFractal fobj, ref Bitmap bm)
         {
-            for (int x = 0; x < fobj.imgWidth; x++)
+            Console.WriteLine("ID: " + fobj.ID);
+
+            if (fobj.ID == 1)
             {
-                for (int y = 0; y < fobj.imgHeight; y++)
+                for (int x = 0; x < fobj.imgWidth/2; x++)
                 {
-                    double a = (double) (x - fobj.imgWidth / 2) / (double) (fobj.imgWidth / 4);
-                    double b = (double) (y - fobj.imgHeight / 2) / (double) (fobj.imgHeight / 4);
-                    ComplexClnt c = new ComplexClnt(a, b);
-                    ComplexClnt z = new ComplexClnt(0, 0);
-                    int it = 0;
-                    //double[] coordinates =
-                    //{
-                    //    a, b
-                    //};
-
-                    do
+                    for (int y = 0; y < fobj.imgHeight; y++)
                     {
-                        it++;
-                        z.Square();
-                        z.Add(c);
+                        double a = (double) (x - fobj.imgWidth / 2) / (double) (fobj.imgWidth / 4);
+                        double b = (double) (y - fobj.imgHeight / 2) / (double) (fobj.imgHeight / 4);
+                        ComplexClnt c = new ComplexClnt(a, b);
+                        ComplexClnt z = new ComplexClnt(0, 0);
+                        int it = 0;
+                        //double[] coordinates =
+                        //{
+                        //    a, b
+                        //};
 
-                        if (z.Magnitude() > 2.0)
+                        do
                         {
-                            break;
-                        }
+                            it++;
+                            z.Square();
+                            z.Add(c);
 
-                        //coordinates[0] = a;
-                        //coordinates[1] = b;
-                    } while (it <= fobj.IterationsCount);
-                    //Console.WriteLine($"{x}:{y}:{it}");
-                    bm.SetPixel(x, y, it < fobj.IterationsCount ? Color.Red : Color.Blue);
+                            if (z.Magnitude() > 2.0)
+                            {
+                                break;
+                            }
+
+                            //coordinates[0] = a;
+                            //coordinates[1] = b;
+                        } while (it <= fobj.IterationsCount);
+                        //Console.WriteLine($"{x}:{y}:{it}");
+                        bm.SetPixel(x, y, it < fobj.IterationsCount ? Color.Red : Color.Blue);
+                    }
+                }
+            }
+            else if (fobj.ID == 2)
+            {
+                for (double x = fobj.imgWidth/2; x < fobj.imgWidth; x++)
+                {
+                    for (int y = 0; y < fobj.imgHeight; y++)
+                    {
+                        double a = (double)(x - fobj.imgWidth / 2) / (double)(fobj.imgWidth / 4);
+                        double b = (double)(y - fobj.imgHeight / 2) / (double)(fobj.imgHeight / 4);
+                        ComplexClnt c = new ComplexClnt(a, b);
+                        ComplexClnt z = new ComplexClnt(0, 0);
+                        int it = 0;
+                        //double[] coordinates =
+                        //{
+                        //    a, b
+                        //};
+
+                        do
+                        {
+                            it++;
+                            z.Square();
+                            z.Add(c);
+
+                            if (z.Magnitude() > 2.0)
+                            {
+                                break;
+                            }
+
+                            //coordinates[0] = a;
+                            //coordinates[1] = b;
+                        } while (it <= fobj.IterationsCount);
+                        //Console.WriteLine($"{x}:{y}:{it}");
+                        bm.SetPixel(Convert.ToInt32(x), y, it < fobj.IterationsCount ? Color.Red : Color.Blue);
+                    }
                 }
             }
         }
