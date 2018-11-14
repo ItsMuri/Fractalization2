@@ -119,6 +119,7 @@ namespace Server
             mySender.Close();
 
             FraktalAnzeigen(verabeiteteDaten);
+            
 
             /*
             Task empfangen = new Task(() =>

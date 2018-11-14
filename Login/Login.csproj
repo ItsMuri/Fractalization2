@@ -122,5 +122,17 @@
       <Name>Server</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="hbs1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Mandelbrot_Logo.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="hbs2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="hbs3.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

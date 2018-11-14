@@ -5,10 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Login"
         mc:Ignorable="d"
-        Title="Fractalization Login" Height="450" Width="800" >
+        Title="Fractalization Login" Height="450" Width="700" WindowState="Normal">
     <Grid>
-        <Button Content="Anmelden" HorizontalAlignment="Left" Margin="300,200,0,0" VerticalAlignment="Top" Width="200" Height="30" Click="Button_Click"/>
-        <Label x:Name="l_info" Content="Via Google Mail anmelden" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="325,160,0,0"/>
+
+        <Image Source="hbs3.png" Stretch="Fill"/>
+
+        <Button Content="Google Anmeldung" HorizontalAlignment="Left" Margin="253,220,0,0" VerticalAlignment="Top" Width="200" Height="30" Click="Button_Click"/>
 
     </Grid>
 </Window>
