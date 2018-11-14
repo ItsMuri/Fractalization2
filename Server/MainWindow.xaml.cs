@@ -138,6 +138,7 @@ namespace Server
         {
             //BitmapImage bmi = BitmapToImageSource(verabeiteteDaten);
             imageFraktal.Dispatcher.Invoke(() => imageFraktal.Source = BitmapToImageSource(verabeiteteDaten));
+            MessageBox.Show("Fertig");
         }
 
         /*private void Button_Loaded(object sender, RoutedEventArgs e)
