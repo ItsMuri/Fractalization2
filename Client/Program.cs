@@ -35,13 +35,13 @@ namespace Client
             while (true)
             {
                 TcpClient client = myListener.AcceptTcpClient();
-
+                Console.WriteLine("Connection established!");
 
                 using (NetworkStream stream = client.GetStream())
                 {
                     var serializer = new DataContractSerializer(typeof(PropsOfFractal));
                     PropsOfFractal fobj = (PropsOfFractal) serializer.ReadObject(stream);
-
+                    
                     Bitmap bm = new Bitmap(400, 400);
                     Calculate(fobj, ref bm);
 
