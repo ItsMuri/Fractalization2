@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Server
 {
     [DataContract]
-    class FraktalTask
+    public class FraktalTask
     {
         [DataMember]
         public int XCoordinates { get; set; }

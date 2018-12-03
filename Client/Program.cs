@@ -22,35 +22,97 @@ namespace Client
             Console.WriteLine("Awaiting Connection");
             //AsyncMain().Start();
             //AsyncMain().Wait();
-            AsyncMain();
+            //AsyncMain();
+            ServerConnenction();
 
             Console.ReadKey();
         }
 
         //static async Task AsyncMain()
-        private static void AsyncMain()
-        {
-            TcpListener myListener = new TcpListener(IPAddress.Loopback, 5566);
-            myListener.Start();
-            while (true)
-            {
-                TcpClient client = myListener.AcceptTcpClient();
-                Console.WriteLine("Connection established!");
+        ////private static void AsyncMain()
+        ////{
+        ////    TcpListener myListener = new TcpListener(IPAddress.Loopback, 5566);
+        ////    myListener.Start();
+        ////    while (true)
+        ////    {
+        ////        TcpClient client = myListener.AcceptTcpClient();
+        ////        Console.WriteLine("Connection established!");
 
+        ////        using (NetworkStream stream = client.GetStream())
+        ////        {
+        ////            var serializer = new DataContractSerializer(typeof(PropsOfFractal));
+        ////            PropsOfFractal fobj = (PropsOfFractal) serializer.ReadObject(stream);
+                    
+        ////            Bitmap bm = new Bitmap(400, 400);
+        ////            Calculate(fobj, ref bm);
+
+        ////            var ser = new DataContractSerializer(typeof(Bitmap));
+        ////            ser.WriteObject(stream, bm);
+        ////        }
+
+        ////        client.Close();
+        ////    }
+        ////}
+
+        public static void ServerConnenction()
+        {
+            Console.WriteLine("---Client1---");
+            var localep = new IPEndPoint(IPAddress.Loopback, 0);
+            TcpClient client = new TcpClient(localep);
+
+            var remotep = new IPEndPoint(IPAddress.Loopback, 1111);
+            try
+            {
+                client.Connect(remotep);
+                string ip = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+                string port = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
+                Console.WriteLine($"Verbunden mit Hauptserver {ip}, {port}");
                 using (NetworkStream stream = client.GetStream())
                 {
                     var serializer = new DataContractSerializer(typeof(PropsOfFractal));
-                    PropsOfFractal fobj = (PropsOfFractal) serializer.ReadObject(stream);
-                    
+                    PropsOfFractal fobj = (PropsOfFractal)serializer.ReadObject(stream);
+
                     Bitmap bm = new Bitmap(400, 400);
                     Calculate(fobj, ref bm);
 
                     var ser = new DataContractSerializer(typeof(Bitmap));
                     ser.WriteObject(stream, bm);
+                
                 }
-
-                client.Close();
             }
+            catch (Exception)
+            {
+                Console.WriteLine("Wechsle zu Backupserver");
+                var bremoteep = new IPEndPoint(IPAddress.Loopback, 2222);
+
+                try
+                {
+                    client.Connect(bremoteep);
+                    string ip = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+                    string port = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
+                    Console.WriteLine($"Verbunden mit Backupserver {ip}, {port}");
+                    using (NetworkStream stream = client.GetStream())
+                    {
+                        using (StreamWriter writer = new StreamWriter(stream, Encoding.ASCII, 2048, true))
+                        {
+                            var serializer = new DataContractSerializer(typeof(PropsOfFractal));
+                            PropsOfFractal fobj = (PropsOfFractal)serializer.ReadObject(stream);
+
+                            Bitmap bm = new Bitmap(400, 400);
+                            Calculate(fobj, ref bm);
+
+                            var ser = new DataContractSerializer(typeof(Bitmap));
+                            ser.WriteObject(stream, bm);
+                        }
+                        System.Threading.Thread.Sleep(2000);
+                    }
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine("Kein Server zur Verfügung");
+                }
+            }
+            Console.ReadKey();
         }
 
         private static void Calculate(PropsOfFractal fobj, ref Bitmap bm)
@@ -82,7 +144,6 @@ namespace Client
                     } while (it <= fobj.IterationsCount);
                     //Console.WriteLine($"{x}:{y}:{it}");
                     bm.SetPixel(x, y, it < fobj.IterationsCount ? Color.Red : Color.Blue);
-
                 }
             }
         }

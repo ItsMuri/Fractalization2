@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -35,10 +36,13 @@ namespace Server
         public MainWindow()
         {
             InitializeComponent();
-            
+
             //Zeichnen lassen
             //Vielleicht kann man das mit WriteableBitmap zeichnen lassen...
-
+            Task T = new Task(() =>
+            {
+                Hello();
+            });
         }
 
         private void ZeichneFraktal()
@@ -119,20 +123,84 @@ namespace Server
             mySender.Close();
 
             FraktalAnzeigen(verabeiteteDaten);
-            
-
-            /*
-            Task empfangen = new Task(() =>
-            {
-                //var serializer = new DataContractSerializer(typeof(FraktalSrv));
-
-                //NetworkStream netStream = new NetworkStream(new Socket(SocketType.Stream, ProtocolType.Tcp));
-            });
-            empfangen.Start();
-            */
-
-            //Ich rufe als Abschluss nun also die Empfangsmethode auf.
         }
+        
+        private  void Hello()
+        {
+           // Console.WriteLine("---Server---");
+            var localep = new IPEndPoint(IPAddress.Loopback, 5555);
+            TcpClient client = new TcpClient(localep);
+
+            var remotep = new IPEndPoint(IPAddress.Loopback, 6666);
+            try
+            {
+                client.Connect(remotep);
+                string ip = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+                string port = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
+               // Console.WriteLine($"Server hat sich mit Backupserver {ip}, {port} verbunden");
+
+                try
+                {
+                    using (NetworkStream stream = client.GetStream())
+                    {
+                        int itanzahl = Convert.ToInt32(tbIterations.Text);
+                        using (var writer = new StreamWriter(stream, Encoding.ASCII, 4096, leaveOpen: true))
+                        {
+                            writer.Write(itanzahl);
+                        };
+
+                        while (true)
+                        {
+                            using (var writer = new StreamWriter(stream, Encoding.ASCII, 4096, leaveOpen: true))
+                            {
+                                writer.WriteLine("Hello");
+                            }
+                            using (var reader = new StreamReader(stream, Encoding.ASCII, true, 4096, leaveOpen: true))
+                            {
+                                string response = reader.ReadLine();
+                                //Console.WriteLine(response);
+                            }
+                            System.Threading.Thread.Sleep(2000);
+                        }
+
+                    }
+                }
+                catch (Exception)
+                {
+                    //  Console.WriteLine("Backupserver ist down!");
+
+                    MessageBox.Show("Der BackupServer ist down!");
+                    Console.ReadKey();
+                }
+                client.Close();
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Kein BackupServer zur Verfügung!");
+               // Console.WriteLine("Kein Backupserver zur Verfügung");
+            }
+            //////catch (Exception)
+            //////{
+            //////    //code der ausgeführt wird wenn der server keine hello pakete mehr schickt
+            //////    int iterationsCount = Convert.ToInt32(tbIterations.Text);
+            //////    PropsOfFractal myFraktal = new PropsOfFractal(iterationsCount);
+            //////    myFraktal.imgWidth = imageFraktal.Width;
+            //////    myFraktal.imgHeight = imageFraktal.Height;
+
+
+            //////    Console.WriteLine("Server ist down");
+            //////    sw.Stop();
+            //////    TimeSpan ts = sw.Elapsed;
+            //////    string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}",
+            //////    ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds);
+            //////    sw.Reset();
+            //////    Console.WriteLine("Runtime " + elapsedTime);
+            //////    Console.WriteLine("Übernehmen der Rolle des Hauptservers");
+            //////    Senden(myFraktal);
+            //////}
+
+        }
+
 
         private void FraktalAnzeigen(Bitmap verabeiteteDaten)
         {
@@ -141,45 +209,25 @@ namespace Server
             MessageBox.Show("Fertig");
         }
 
-        /*private void Button_Loaded(object sender, RoutedEventArgs e)
-        {
-            Task.Run(() =>
-            {
-                listener = new TcpListener(IPAddress.Loopback, 5566);
-                listener.Start();
-            });
-        }*/
-
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            //Task t = CalculateTask();
-            //ZeichneFraktal();
-
-
             int iterationsCount = Convert.ToInt32(tbIterations.Text);
-            SerializedFraktal.PropsOfFractal myFraktal = new PropsOfFractal(iterationsCount);
+            PropsOfFractal myFraktal = new PropsOfFractal(iterationsCount);
             myFraktal.imgWidth = imageFraktal.Width;
             myFraktal.imgHeight = imageFraktal.Height;
-            //FraktalSrv myFraktal = new FraktalSrv(iterationsCount);
-            
-            /*double[] xCoordinates = new double[5];
-            for (int i = 0; i < 5; i++)
-            {
-                xCoordinates[i] = -2.0 + i;
-            }
-            myFraktal.KoordinatenX = xCoordinates; //X Koordinaten gesetzt!
-            double[] ycoordinates = new double[2];
-            double imaginaryNumber = Math.Sqrt(-1);
-            ycoordinates[0] = Math.Sqrt(-imaginaryNumber);
-            ycoordinates[1] = Math.Sqrt(imaginaryNumber);
-            myFraktal.KoordinatenY = ycoordinates; //Y Koordinaten gesetzt!
-            */
+          
 
-            Task senden = new Task(() =>
+            Task t1 = new Task(() =>
             {
-                Senden(myFraktal);
+                Hello();
             });
-            senden.Start();
+            t1.Start();
+
+            Task t2 = new Task(() =>
+                {
+                    Senden(myFraktal);
+                });
+            t2.Start();
         }
 
         /*private async Task CalculateTask()
