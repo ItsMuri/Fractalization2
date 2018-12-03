@@ -130,6 +130,7 @@ namespace Server
             try
             {
                 client.Connect(remotep);
+              
                 string ip = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
                 string port = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
 
