@@ -31,18 +31,20 @@ namespace Server
     /// </summary>
     public partial class MainWindow : Window
     {
-        //private TcpListener listener;
-
+        private TcpListener listener; 
         public MainWindow()
         {
             InitializeComponent();
+            var localep = new IPEndPoint(IPAddress.Loopback, 3333);
+            listener = new TcpListener(localep);
+            listener.Start();
 
-            //Zeichnen lassen
-            //Vielleicht kann man das mit WriteableBitmap zeichnen lassen...
             Task T = new Task(() =>
             {
+                
                 Hello();
             });
+            T.Start();
         }
 
         private void ZeichneFraktal()
@@ -54,17 +56,17 @@ namespace Server
             int cntInterations = Convert.ToInt32(Dispatcher.Invoke(() => tbIterations.Text));
             FraktalTask ft = new FraktalTask();
             // in ft werden die verschiedenen Koordinaten 
-            
 
-                //Versuche das Fraktal in 2 Sektoren zu unterteilen!!!
-                Bitmap bm = new Bitmap(Convert.ToInt32(imageFraktal.Width),Convert.ToInt32(imageFraktal.Height));
-                Bitmap lowerBm = new Bitmap(Convert.ToInt32(imageFraktal.Width/2), Convert.ToInt32(imageFraktal.Height/2));
-                //Haben jetzt zwei Bereiche, lowerBm ist der untere Bereich der Bitmap
-                //also in diesem Fall 200 x 200 bei einem Original von 400 x 400
-                //Idee: Färbe zuerst die 400 x 400 Fläche und danach die 200 x 200 Fläche
-        
 
-        for (int x = 0; x < imageFraktal.Width; x++)
+            //Versuche das Fraktal in 2 Sektoren zu unterteilen!!!
+            Bitmap bm = new Bitmap(Convert.ToInt32(imageFraktal.Width), Convert.ToInt32(imageFraktal.Height));
+            Bitmap lowerBm = new Bitmap(Convert.ToInt32(imageFraktal.Width / 2), Convert.ToInt32(imageFraktal.Height / 2));
+            //Haben jetzt zwei Bereiche, lowerBm ist der untere Bereich der Bitmap
+            //also in diesem Fall 200 x 200 bei einem Original von 400 x 400
+            //Idee: Färbe zuerst die 400 x 400 Fläche und danach die 200 x 200 Fläche
+
+
+            for (int x = 0; x < imageFraktal.Width; x++)
             {
                 for (int y = 0; y < imageFraktal.Height; y++)
                 {
@@ -91,43 +93,36 @@ namespace Server
 
                 }
             }
-            
+
 
 
             BitmapImage bmi = BitmapToImageSource(bm);
 
             imageFraktal.Source = bmi;
-            
-        }
 
-        /*
-        private Task Empfangen()
-        {
-            //Hier wird dann später empfangen
-            
         }
-        */
 
         private void Senden(PropsOfFractal myFraktal)
         {
             //Hier werden nun die Informationen gesendet
-            TcpClient mySender = new TcpClient();
-            mySender.Connect(IPAddress.Loopback,5566);
-            NetworkStream netStream = mySender.GetStream();
-            var serializer = new DataContractSerializer(typeof(PropsOfFractal));
-            serializer.WriteObject(netStream, myFraktal);
-            mySender.Client.Shutdown(SocketShutdown.Send);
-            var BitmSerializer = new DataContractSerializer(typeof(Bitmap));
-            Bitmap verabeiteteDaten = (Bitmap)BitmSerializer.ReadObject(netStream);
-            netStream.Close();
-            mySender.Close();
-
-            FraktalAnzeigen(verabeiteteDaten);
+            using (TcpClient client = listener.AcceptTcpClient())
+            {
+                using (NetworkStream stream = client.GetStream())
+                {
+                    var serializer = new DataContractSerializer(typeof(PropsOfFractal));
+                    serializer.WriteObject(stream, myFraktal);
+                    client.Client.Shutdown(SocketShutdown.Send);
+                    var BitmSerializer = new DataContractSerializer(typeof(Bitmap));
+                    Bitmap verabeiteteDaten = (Bitmap)BitmSerializer.ReadObject(stream);
+                    FraktalAnzeigen(verabeiteteDaten);
+                };
+            };
+            
         }
-        
-        private  void Hello()
+
+        private void Hello()
         {
-           // Console.WriteLine("---Server---");
+            // Console.WriteLine("---Server---");
             var localep = new IPEndPoint(IPAddress.Loopback, 5555);
             TcpClient client = new TcpClient(localep);
 
@@ -137,13 +132,15 @@ namespace Server
                 client.Connect(remotep);
                 string ip = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
                 string port = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
-               // Console.WriteLine($"Server hat sich mit Backupserver {ip}, {port} verbunden");
 
                 try
                 {
                     using (NetworkStream stream = client.GetStream())
                     {
-                        int itanzahl = Convert.ToInt32(tbIterations.Text);
+
+
+                        int itanzahl = Convert.ToInt32(Dispatcher.Invoke(() => tbIterations.Text));
+                        
                         using (var writer = new StreamWriter(stream, Encoding.ASCII, 4096, leaveOpen: true))
                         {
                             writer.Write(itanzahl);
@@ -158,46 +155,23 @@ namespace Server
                             using (var reader = new StreamReader(stream, Encoding.ASCII, true, 4096, leaveOpen: true))
                             {
                                 string response = reader.ReadLine();
-                                //Console.WriteLine(response);
                             }
                             System.Threading.Thread.Sleep(2000);
                         }
-
                     }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    //  Console.WriteLine("Backupserver ist down!");
-
-                    MessageBox.Show("Der BackupServer ist down!");
+                    MessageBox.Show("Der BackupServer ist down!" + e);
                     Console.ReadKey();
                 }
                 client.Close();
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                MessageBox.Show("Kein BackupServer zur Verfügung!");
-               // Console.WriteLine("Kein Backupserver zur Verfügung");
+                MessageBox.Show("Kein BackupServer zur Verfügung!" + e);
+
             }
-            //////catch (Exception)
-            //////{
-            //////    //code der ausgeführt wird wenn der server keine hello pakete mehr schickt
-            //////    int iterationsCount = Convert.ToInt32(tbIterations.Text);
-            //////    PropsOfFractal myFraktal = new PropsOfFractal(iterationsCount);
-            //////    myFraktal.imgWidth = imageFraktal.Width;
-            //////    myFraktal.imgHeight = imageFraktal.Height;
-
-
-            //////    Console.WriteLine("Server ist down");
-            //////    sw.Stop();
-            //////    TimeSpan ts = sw.Elapsed;
-            //////    string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}",
-            //////    ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds);
-            //////    sw.Reset();
-            //////    Console.WriteLine("Runtime " + elapsedTime);
-            //////    Console.WriteLine("Übernehmen der Rolle des Hauptservers");
-            //////    Senden(myFraktal);
-            //////}
 
         }
 
@@ -215,13 +189,6 @@ namespace Server
             PropsOfFractal myFraktal = new PropsOfFractal(iterationsCount);
             myFraktal.imgWidth = imageFraktal.Width;
             myFraktal.imgHeight = imageFraktal.Height;
-          
-
-            Task t1 = new Task(() =>
-            {
-                Hello();
-            });
-            t1.Start();
 
             Task t2 = new Task(() =>
                 {
@@ -229,34 +196,7 @@ namespace Server
                 });
             t2.Start();
         }
-
-        /*private async Task CalculateTask()
-        {
-            while (true)
-            {
-                TcpClient tcpClient = await listener.AcceptTcpClientAsync();
-
-                using (NetworkStream stream = tcpClient.GetStream())
-                {
-                    while (true)
-                    {
-                        using (var writer = new StreamWriter(stream, Encoding.ASCII, 4096, leaveOpen: true))
-                        {
-                            string str = Convert.ToString("Connection established");
-                            writer.WriteLine(str);
-                        }
-
-                        using (var reader =
-                            new StreamReader(stream, Encoding.ASCII, true, 4096, leaveOpen: true))
-                        {
-                            string answer = reader.ReadLine();
-                            MessageBox.Show($"{answer}");
-                        }
-                    }
-                }
-            }
-        }*/
-
+        
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             //Dieser Code wird erst verwendet wenn wir erste Testclients haben!
@@ -279,7 +219,7 @@ namespace Server
                 }
             }*/
 
-            
+
 
 
         }

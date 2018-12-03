@@ -20,39 +20,13 @@ namespace Client
         static void Main(string[] args)
         {
             Console.WriteLine("Awaiting Connection");
-            //AsyncMain().Start();
-            //AsyncMain().Wait();
-            //AsyncMain();
+            
             ServerConnenction();
 
             Console.ReadKey();
         }
 
-        //static async Task AsyncMain()
-        ////private static void AsyncMain()
-        ////{
-        ////    TcpListener myListener = new TcpListener(IPAddress.Loopback, 5566);
-        ////    myListener.Start();
-        ////    while (true)
-        ////    {
-        ////        TcpClient client = myListener.AcceptTcpClient();
-        ////        Console.WriteLine("Connection established!");
-
-        ////        using (NetworkStream stream = client.GetStream())
-        ////        {
-        ////            var serializer = new DataContractSerializer(typeof(PropsOfFractal));
-        ////            PropsOfFractal fobj = (PropsOfFractal) serializer.ReadObject(stream);
-                    
-        ////            Bitmap bm = new Bitmap(400, 400);
-        ////            Calculate(fobj, ref bm);
-
-        ////            var ser = new DataContractSerializer(typeof(Bitmap));
-        ////            ser.WriteObject(stream, bm);
-        ////        }
-
-        ////        client.Close();
-        ////    }
-        ////}
+        
 
         public static void ServerConnenction()
         {
@@ -60,7 +34,7 @@ namespace Client
             var localep = new IPEndPoint(IPAddress.Loopback, 0);
             TcpClient client = new TcpClient(localep);
 
-            var remotep = new IPEndPoint(IPAddress.Loopback, 1111);
+            var remotep = new IPEndPoint(IPAddress.Loopback, 3333);
             try
             {
                 client.Connect(remotep);
@@ -82,16 +56,19 @@ namespace Client
             }
             catch (Exception)
             {
+
                 Console.WriteLine("Wechsle zu Backupserver");
                 var bremoteep = new IPEndPoint(IPAddress.Loopback, 2222);
+                TcpClient client2 = new TcpClient(localep);
 
                 try
                 {
-                    client.Connect(bremoteep);
-                    string ip = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
-                    string port = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
-                    Console.WriteLine($"Verbunden mit Backupserver {ip}, {port}");
-                    using (NetworkStream stream = client.GetStream())
+                    client2.Connect(bremoteep);
+                    string ip = ((IPEndPoint)client2.Client.RemoteEndPoint).Address.ToString();
+                    string port = ((IPEndPoint)client2.Client.RemoteEndPoint).Port.ToString();
+                    Console.WriteLine($"Verbunden mit BackupServer {ip}, {port}");
+
+                    using (NetworkStream stream = client2.GetStream())
                     {
                         using (StreamWriter writer = new StreamWriter(stream, Encoding.ASCII, 2048, true))
                         {
@@ -107,9 +84,9 @@ namespace Client
                         System.Threading.Thread.Sleep(2000);
                     }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    Console.WriteLine("Kein Server zur Verfügung");
+                    Console.WriteLine(e);
                 }
             }
             Console.ReadKey();
