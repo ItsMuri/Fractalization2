@@ -30,7 +30,7 @@ namespace Server
     /// </summary>
     public partial class MainWindow : Window
     {
-        //private TcpListener listener;
+        private TcpListener listener;
 
         public MainWindow()
         {
@@ -64,8 +64,8 @@ namespace Server
             {
                 for (int y = 0; y < imageFraktal.Height; y++)
                 {
-                    double a = (double) (x - (imageFraktal.Width / 2)) / (double) (imageFraktal.Width / 4);
-                    double b = (double) (y - (imageFraktal.Height / 2)) / (double) (imageFraktal.Height / 4);
+                    double a = (double)(x - (imageFraktal.Width / 2)) / (double)(imageFraktal.Width / 4);
+                    double b = (double)(y - (imageFraktal.Height / 2)) / (double)(imageFraktal.Height / 4);
                     Complex c = new Complex(a, b);
                     Complex z = new Complex(0, 0);
                     int it = 0;
@@ -94,8 +94,8 @@ namespace Server
             {
                 for (int y = 0; y < imageFraktal.Height; y++)
                 {
-                    double a = (double) (x - (imageFraktal.Width / 2)) / (double) (imageFraktal.Width / 4);
-                    double b = (double) (y - (imageFraktal.Height / 2)) / (double) (imageFraktal.Height / 4);
+                    double a = (double)(x - (imageFraktal.Width / 2)) / (double)(imageFraktal.Width / 4);
+                    double b = (double)(y - (imageFraktal.Height / 2)) / (double)(imageFraktal.Height / 4);
                     Complex c = new Complex(a, b);
                     Complex z = new Complex(0, 0);
                     int it = 0;
@@ -133,8 +133,6 @@ namespace Server
             //Hier werden nun die Informationen gesendet
             //TcpClient mySender = new TcpClient();
             //mySender.Connect(IPAddress.Loopback, 5566);
-            TcpListener listener = new TcpListener(IPAddress.Loopback, 5566);
-            listener.Start();
 
             while (true)
             {
@@ -149,7 +147,7 @@ namespace Server
                 mySender.Client.Shutdown(SocketShutdown.Send);
 
                 var bitmSerializer = new DataContractSerializer(typeof(Bitmap));
-                Bitmap verabeiteteDaten = (Bitmap) bitmSerializer.ReadObject(netStream);
+                var verabeiteteDaten = (Bitmap)bitmSerializer.ReadObject(netStream);
 
                 netStream.Close();
                 mySender.Close();
@@ -193,9 +191,11 @@ namespace Server
 
 
             int iterationsCount = Convert.ToInt32(tbIterations.Text);
-            PropsOfFractal myFraktal = new PropsOfFractal(iterationsCount);
-            myFraktal.imgWidth = imageFraktal.Width;
-            myFraktal.imgHeight = imageFraktal.Height;
+            PropsOfFractal myFraktal = new PropsOfFractal(iterationsCount)
+            {
+                imgWidth = imageFraktal.Width,
+                imgHeight = imageFraktal.Height
+            };
             //FraktalSrv myFraktal = new FraktalSrv(iterationsCount);
 
             /*double[] xCoordinates = new double[5];
@@ -249,6 +249,9 @@ namespace Server
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             //Dieser Code wird erst verwendet wenn wir erste Testclients haben!
+
+            listener = new TcpListener(IPAddress.Loopback, 5566);
+            listener.Start();
 
             /*
             int countAvailablePcS = 0;
