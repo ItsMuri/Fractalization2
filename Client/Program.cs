@@ -33,7 +33,7 @@ namespace Client
             //TcpListener myListener = new TcpListener(IPAddress.Loopback, 5566);
             //myListener.Start();
             TcpClient client = new TcpClient(new IPEndPoint(IPAddress.Any, 0));
-            client.Connect(IPAddress.Loopback, 5566);
+            client.Connect(IPAddress.Loopback, 2222);
             Console.WriteLine("Connected");
 
             //while (true)

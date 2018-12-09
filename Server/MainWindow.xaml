@@ -11,13 +11,13 @@
             <ColumnDefinition Width="101*"/>
             <ColumnDefinition Width="31*"/>
         </Grid.ColumnDefinitions>
-        <Label Content="Computer(s) available:" HorizontalAlignment="Left" Margin="61.455,10,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+        <Label Content="Computer(s) available:" HorizontalAlignment="Left" Margin="29,10,0,0" VerticalAlignment="Top" Grid.Column="1"/>
         <Label Content="Iterations:" HorizontalAlignment="Left" Margin="29.455,182,0,0" VerticalAlignment="Top" Grid.Column="1"/>
         <TextBox x:Name="tbIterations" HorizontalAlignment="Left" Height="20" Margin="91.455,186,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="85" Grid.Column="1" Text="100"/>
         <Canvas x:Name="canvasDraw" HorizontalAlignment="Left" Height="113" Margin="10,10,0,0" VerticalAlignment="Top" Width="586" Background="Blue"/>
         <Button x:Name="btnCalculate" Content="Calculate" HorizontalAlignment="Left" Margin="66.455,274,0,0" VerticalAlignment="Top" Width="110" Height="45" Click="Button_Click" Grid.Column="1"/>
         <Slider HorizontalAlignment="Left" Margin="61.455,368,0,0" VerticalAlignment="Top" Width="115" Grid.Column="1"/>
-        <Label x:Name="labelComputerAvailable" Content="counter" Grid.Column="1" HorizontalAlignment="Left" Margin="91,41,0,0" VerticalAlignment="Top" Height="47" Width="75"/>
+        <Label x:Name="labelComputerAvailable" Content="" Grid.Column="1" HorizontalAlignment="Left" Margin="161,10,0,0" VerticalAlignment="Top" Height="36" Width="44"/>
         <Image x:Name="imageFraktal" HorizontalAlignment="Left" Height="400" Margin="10,149,0,-130" VerticalAlignment="Top" Width="400"/>
 
     </Grid>

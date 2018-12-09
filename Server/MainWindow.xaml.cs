@@ -31,6 +31,9 @@ namespace Server
     public partial class MainWindow : Window
     {
         private TcpListener listener;
+        List<Bitmap> bitmapList = new List<Bitmap>();
+        List<TcpClient> listConnectedClients = new List<TcpClient>();
+
 
         public MainWindow()
         {
@@ -64,8 +67,8 @@ namespace Server
             {
                 for (int y = 0; y < imageFraktal.Height; y++)
                 {
-                    double a = (double)(x - (imageFraktal.Width / 2)) / (double)(imageFraktal.Width / 4);
-                    double b = (double)(y - (imageFraktal.Height / 2)) / (double)(imageFraktal.Height / 4);
+                    double a = (double) (x - (imageFraktal.Width / 2)) / (double) (imageFraktal.Width / 4);
+                    double b = (double) (y - (imageFraktal.Height / 2)) / (double) (imageFraktal.Height / 4);
                     Complex c = new Complex(a, b);
                     Complex z = new Complex(0, 0);
                     int it = 0;
@@ -94,8 +97,8 @@ namespace Server
             {
                 for (int y = 0; y < imageFraktal.Height; y++)
                 {
-                    double a = (double)(x - (imageFraktal.Width / 2)) / (double)(imageFraktal.Width / 4);
-                    double b = (double)(y - (imageFraktal.Height / 2)) / (double)(imageFraktal.Height / 4);
+                    double a = (double) (x - (imageFraktal.Width / 2)) / (double) (imageFraktal.Width / 4);
+                    double b = (double) (y - (imageFraktal.Height / 2)) / (double) (imageFraktal.Height / 4);
                     Complex c = new Complex(a, b);
                     Complex z = new Complex(0, 0);
                     int it = 0;
@@ -137,6 +140,8 @@ namespace Server
             while (true)
             {
                 var mySender = listener.AcceptTcpClient();
+                listConnectedClients.Add(mySender);
+                Dispatcher.Invoke(() => labelComputerAvailable.Content = listConnectedClients.Count);
 
                 myFraktal.ID += 1;
 
@@ -147,12 +152,15 @@ namespace Server
                 mySender.Client.Shutdown(SocketShutdown.Send);
 
                 var bitmSerializer = new DataContractSerializer(typeof(Bitmap));
-                var verabeiteteDaten = (Bitmap)bitmSerializer.ReadObject(netStream);
+                var verarbeiteteDaten = (Bitmap) bitmSerializer.ReadObject(netStream);
 
                 netStream.Close();
                 mySender.Close();
 
-                FraktalAnzeigen(verabeiteteDaten);
+                bitmapList.Add(verarbeiteteDaten);
+
+                if (bitmapList.Count == 2)
+                    FraktalAnzeigen(bitmapList, myFraktal);
             }
 
 
@@ -169,10 +177,32 @@ namespace Server
             //Ich rufe als Abschluss nun also die Empfangsmethode auf.
         }
 
-        private void FraktalAnzeigen(Bitmap verabeiteteDaten)
+        private void FraktalAnzeigen(List<Bitmap> bitmapList, PropsOfFractal myFraktal)
         {
+            //foreach (var item in bitmapList)
+            //{
+            int width = Convert.ToInt32(myFraktal.imgWidth);
+            int height = Convert.ToInt32(myFraktal.imgHeight);
+            Bitmap newImage = new Bitmap(width, height);
+
+            for (int x = 0; x < width / 2; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    newImage.SetPixel(x, y, bitmapList[0].GetPixel(x, y));
+                }
+            }
+            for (int x = width / 2; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    newImage.SetPixel(x, y, bitmapList[1].GetPixel(x, y));
+                }
+            }
+            //}
+
             //BitmapImage bmi = BitmapToImageSource(verabeiteteDaten);
-            imageFraktal.Dispatcher.Invoke(() => imageFraktal.Source = BitmapToImageSource(verabeiteteDaten));
+            imageFraktal.Dispatcher.Invoke(() => imageFraktal.Source = BitmapToImageSource(newImage));
         }
 
         /*private void Button_Loaded(object sender, RoutedEventArgs e)
@@ -250,9 +280,8 @@ namespace Server
         {
             //Dieser Code wird erst verwendet wenn wir erste Testclients haben!
 
-            listener = new TcpListener(IPAddress.Loopback, 5566);
+            listener = new TcpListener(IPAddress.Loopback, 2222);
             listener.Start();
-
             /*
             int countAvailablePcS = 0;
             string[] availablePcS = new string[100];
