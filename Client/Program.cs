@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using SerializedFraktal;
+
 //using Server;
 
 namespace Client
@@ -75,14 +76,24 @@ namespace Client
                         z.Square();
                         z.Add(c);
 
-                        if (z.Magnitude() > 2.0) { break;}
+                        if (z.Magnitude() > 2.0)
+                        {
+                            break;
+                        }
 
                         //coordinates[0] = a;
                         //coordinates[1] = b;
                     } while (it <= fobj.IterationsCount);
-                    //Console.WriteLine($"{x}:{y}:{it}");
-                    bm.SetPixel(x, y, it < fobj.IterationsCount ? Color.Red : Color.Blue);
 
+                    //Console.WriteLine($"{x}:{y}:{it}");
+                    //bm.SetPixel(x, y, it < fobj.IterationsCount ? Color.Red : Color.Blue);
+                    /*Color.FromArgb(fobj.IterationsCount % 128 * 2, fobj.IterationsCount % 32 * 7,
+                        fobj.IterationsCount % 16 * 14);
+                        */
+
+                    bm.SetPixel(x, y,
+                        Color.FromArgb(fobj.IterationsCount % 128 * 2, fobj.IterationsCount % 32 * 7,
+                            fobj.IterationsCount % 16 * 14));
                 }
             }
         }

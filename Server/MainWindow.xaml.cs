@@ -137,6 +137,7 @@ namespace Server
         {
             //BitmapImage bmi = BitmapToImageSource(verabeiteteDaten);
             imageFraktal.Dispatcher.Invoke(() => imageFraktal.Source = BitmapToImageSource(verabeiteteDaten));
+            //Color.FromArgb(loopgo % 128 * 2, loopgo % 32 * 7, loopgo % 16 * 14); Mögl. färben des Fraktals
         }
 
         /*private void Button_Loaded(object sender, RoutedEventArgs e)
