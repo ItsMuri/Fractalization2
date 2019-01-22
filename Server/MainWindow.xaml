@@ -39,8 +39,6 @@
                 </Image.RenderTransform>
             </Image>
         </Border>
-        <Slider x:Name="SliderZoom" HorizontalAlignment="Left" Margin="61.455,368,0,0" VerticalAlignment="Top"
-                Width="115" Grid.Column="1" Value="0.5" Minimum="0.5" Maximum="5.0" LargeChange="0.5" SmallChange="0.1" />
 
         <Label Content="Amount of Clients:" Grid.Column="1" HorizontalAlignment="Left" Margin="30,97,0,0"
                VerticalAlignment="Top" />

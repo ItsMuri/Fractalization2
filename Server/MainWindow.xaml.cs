@@ -21,6 +21,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using SerializedFraktal;
+using Point = System.Windows.Point;
 using Color = System.Drawing.Color;
 
 namespace Server
@@ -31,6 +32,8 @@ namespace Server
     public partial class MainWindow : Window
     {
         //private TcpListener listener;
+        private Point origin;
+        private Point start;
 
         public MainWindow()
         {
@@ -250,6 +253,43 @@ namespace Server
 
                 return bitmapimage;
             }
+        }
+
+        private void ImageFraktal_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            var st = (ScaleTransform)((TransformGroup)imageFraktal.RenderTransform).Children.First(tr =>
+                tr is ScaleTransform);
+            var zoom = e.Delta > 0 ? .2 : -.2;
+            st.ScaleX += zoom;
+            st.ScaleY += zoom;
+        }
+
+        private void ImageFraktal_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            imageFraktal.CaptureMouse();
+            var tt = (TranslateTransform)((TransformGroup)imageFraktal.RenderTransform).Children.First(tr =>
+                tr is TranslateTransform);
+
+            start = e.GetPosition(BorderImage);
+            origin = new Point(tt.X, tt.Y);
+        }
+
+        private void ImageFraktal_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (imageFraktal.IsMouseCaptured)
+            {
+                var tt = (TranslateTransform)((TransformGroup)imageFraktal.RenderTransform).Children.First(tr =>
+                    tr is TranslateTransform);
+
+                var v = start - e.GetPosition(BorderImage);
+                tt.X = origin.X - v.X;
+                tt.Y = origin.Y - v.Y;
+            }
+        }
+
+        private void ImageFraktal_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            imageFraktal.ReleaseMouseCapture();
         }
     }
 }
