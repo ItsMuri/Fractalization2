@@ -11,39 +11,129 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using SerializedFraktal;
-//using Server;
+
 
 namespace Client
 {
     class Program
     {
+
+
         static void Main(string[] args)
         {
+            Console.WriteLine("---Client1---");
+
             Console.WriteLine("Awaiting Connection");
 
+            Thread.Sleep(10000);
             ServerConnenction();
+            //TryToConnectServer();
 
-            Console.ReadKey();
+
+            //Console.ReadLine();
+            //Console.ReadKey();
         }
+        // Es wird alle 10 Sekunden versucht sich mit dem Hauptserver zu verbinden. Der Client versucht sich zu verbinden. Wenn die Verbindung erfolgreich war
+        // wird die Methode Server Connection erneut aufgerufen.
+        //public static bool TryToConnectServer()
+        //{
+        //    var localep = new IPEndPoint(IPAddress.Loopback, 0);
+        //    TcpClient client = new TcpClient(localep);
+        //    var remoteep = new IPEndPoint(IPAddress.Loopback, 3333);
 
+        //    try
+        //    {
+        //        Console.WriteLine("Versuche mit dem Haupt Server zu verbinden");
+        //        client.Connect(remoteep);
 
+        //        string ip = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+        //        string port_client = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
+        //        Console.WriteLine($"Erneut verbunden mit Haupt Server {ip}, {port_client}");
+
+        //        client.Close();
+        //        return true;
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        return false;
+        //    }
+
+        //}
+        //Derzeitiges Problem: Hauptserver +  client: Hauptserver sagt berechne, client schickt berechnung zurück und Server zeigt an.
+        //Dann, obwohl der Hauptserver noch läuft, verbindet sich der Client mit dem Backup Server und wartet dort auf die neue Eingabe
+        //und berechnet sie dann an den Backup
 
         public static void ServerConnenction()
         {
-            Console.WriteLine("---Client1---");
-            var localep = new IPEndPoint(IPAddress.Loopback, 0);
-            TcpClient client = new TcpClient(localep);
-
-            var remotep = new IPEndPoint(IPAddress.Loopback, 3333);
-            try
+            // Forschleife anzahl versuche / min überprüfen muss noch gemacht werden
+            while (true)
             {
-                client.Connect(remotep);
-                string ip = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
-                string port = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
-                Console.WriteLine($"Verbunden mit Hauptserver {ip}, {port}");
-                
+                bool success = ProcessRequests(3333);
+
+                if (!success)
+                {
+                    Console.WriteLine("Wechsle zu Backupserver");
+                    ProcessRequests(2222);
+
+                    //Thread.Sleep(10000);
+                    //for (int i = 0; i <= 60; i++)
+                    //{
+                    //    bool ConnectionWorks = TryToConnectServer();
+                    //    if (ConnectionWorks == true)
+                    //    {
+                    //        ProcessRequests(3333);
+                    //        Console.WriteLine("Es hat geklappt");
+                    //        break;
+                    //    }
+                    //    else
+                    //    {
+                    //        Console.WriteLine("Leider kein bs verfügbar!");
+                    //        i++;
+                    //        Thread.Sleep(2000);
+                    //    }
+                    //}
+
+                }
+                else
+                {
+                    Console.WriteLine("Wechsle zu Server");
+                    ProcessRequests(3333);
+                }
+                Thread.Sleep(1000);
+            }
+        }
+
+
+        private static bool ProcessRequests(int port)
+        {
+            var localep = new IPEndPoint(IPAddress.Loopback, 0);
+
+            //while (true)
+            //{
+                TcpClient client = new TcpClient(localep);
+
+                var remotep = new IPEndPoint(IPAddress.Loopback, port);
+                try
+                {
+                    client.Connect(remotep);
+                    string ip = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+                    string port_client = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
+                    if (port == 3333)
+                    {
+                        Console.WriteLine($"Verbunden mit Server {ip}, {port_client}");
+                    }
+                    else if (port == 2222)
+                    {
+                        Console.WriteLine($"Verbunden mit Backup Server {ip}, {port_client}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Verbunden mit Unbekanntem Server {ip}, {port_client}");
+                    }
+
                     using (NetworkStream stream = client.GetStream())
                     {
+                        Console.WriteLine("Iterating ...");
                         var serializer = new DataContractSerializer(typeof(PropsOfFractal));
                         PropsOfFractal fobj = (PropsOfFractal)serializer.ReadObject(stream);
 
@@ -53,46 +143,15 @@ namespace Client
                         var ser = new DataContractSerializer(typeof(Bitmap));
                         ser.WriteObject(stream, bm);
                     }
-                
-            }
-            catch (Exception)
-            {
-
-                Console.WriteLine("Wechsle zu Backupserver");
-                var bremoteep = new IPEndPoint(IPAddress.Loopback, 2222);
-                TcpClient client2 = new TcpClient(localep);
-
-                try
-                {
-                    client2.Connect(bremoteep);
-                    string ip = ((IPEndPoint)client2.Client.RemoteEndPoint).Address.ToString();
-                    string port = ((IPEndPoint)client2.Client.RemoteEndPoint).Port.ToString();
-                    Console.WriteLine($"Verbunden mit BackupServer {ip}, {port}");
-                    
-                        using (NetworkStream stream = client2.GetStream())
-                        {
-                            using (StreamWriter writer = new StreamWriter(stream, Encoding.ASCII, 2048, true))
-                            {
-                                var serializer = new DataContractSerializer(typeof(PropsOfFractal));
-                                PropsOfFractal fobj = (PropsOfFractal)serializer.ReadObject(stream);
-
-                                Bitmap bm = new Bitmap(400, 400);
-                                Calculate(fobj, ref bm);
-
-                                var ser = new DataContractSerializer(typeof(Bitmap));
-                                ser.WriteObject(stream, bm);
-                            }
-                            System.Threading.Thread.Sleep(2000);
-                        }
-                    
-
+                    client.Close();
+                return true;
                 }
-                catch (Exception e)
+                catch (Exception e2)
                 {
-                    Console.WriteLine(e);
+                    Console.WriteLine("Exception caught ..." + e2.Message);
+                    return false;
                 }
-            }
-            Console.ReadKey();
+            //}
         }
 
         private static void Calculate(PropsOfFractal fobj, ref Bitmap bm)

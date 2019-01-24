@@ -31,7 +31,7 @@ namespace Server
     /// </summary>
     public partial class MainWindow : Window
     {
-        private TcpListener listener; 
+        private TcpListener listener;
         public MainWindow()
         {
             InitializeComponent();
@@ -41,30 +41,24 @@ namespace Server
 
             Task T = new Task(() =>
             {
-                
-                Hello();
+                //Hello();
+                Connection();
             });
             T.Start();
         }
 
         private void ZeichneFraktal()
         {
-            // Bitmap zum Zeichnen des Fraktals verwenden!
-            //Referenz auf Video YT in liked Liste!
-
 
             int cntInterations = Convert.ToInt32(Dispatcher.Invoke(() => tbIterations.Text));
             FraktalTask ft = new FraktalTask();
-            // in ft werden die verschiedenen Koordinaten 
-
-
+            // in ft werden die verschiedenen 
             //Versuche das Fraktal in 2 Sektoren zu unterteilen!!!
             Bitmap bm = new Bitmap(Convert.ToInt32(imageFraktal.Width), Convert.ToInt32(imageFraktal.Height));
             Bitmap lowerBm = new Bitmap(Convert.ToInt32(imageFraktal.Width / 2), Convert.ToInt32(imageFraktal.Height / 2));
             //Haben jetzt zwei Bereiche, lowerBm ist der untere Bereich der Bitmap
             //also in diesem Fall 200 x 200 bei einem Original von 400 x 400
             //Idee: Färbe zuerst die 400 x 400 Fläche und danach die 200 x 200 Fläche
-
 
             for (int x = 0; x < imageFraktal.Width; x++)
             {
@@ -90,16 +84,10 @@ namespace Server
                     bm.SetPixel(x, y, it < cntInterations ? Color.Aquamarine : Color.Red);
                     //lowerBm.SetPixel(x,y, it < cntInterations ? Color.Yellow : Color.Blue);
                     //Mehrere Farben so anzeigen lassen, funktioniert so nicht!!!
-
                 }
             }
-
-
-
             BitmapImage bmi = BitmapToImageSource(bm);
-
             imageFraktal.Source = bmi;
-
         }
 
         private void Senden(PropsOfFractal myFraktal)
@@ -117,45 +105,38 @@ namespace Server
                     FraktalAnzeigen(verabeiteteDaten);
                 };
             };
-            
         }
 
         private void Hello()
         {
             // Console.WriteLine("---Server---");
-            var localep = new IPEndPoint(IPAddress.Loopback, 5555);
+            var localep = new IPEndPoint(IPAddress.Loopback, 0);
             TcpClient client = new TcpClient(localep);
 
             var remotep = new IPEndPoint(IPAddress.Loopback, 6666);
             try
             {
+                Thread.Sleep(10000);
                 client.Connect(remotep);
-              
-                string ip = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
-                string port = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
-
                 try
                 {
                     using (NetworkStream stream = client.GetStream())
                     {
 
-
-                        int itanzahl = Convert.ToInt32(Dispatcher.Invoke(() => tbIterations.Text));
                         
-                        using (var writer = new StreamWriter(stream, Encoding.ASCII, 4096, leaveOpen: true))
-                        {
-                            writer.Write(itanzahl);
-                        };
-
                         while (true)
                         {
                             using (var writer = new StreamWriter(stream, Encoding.ASCII, 4096, leaveOpen: true))
                             {
-                                writer.WriteLine("Hello");
+                               int itanzahl = Convert.ToInt32(Dispatcher.Invoke(() => tbIterations.Text));
+
+                                writer.WriteLine("Hello." + itanzahl.ToString());
                             }
                             using (var reader = new StreamReader(stream, Encoding.ASCII, true, 4096, leaveOpen: true))
                             {
                                 string response = reader.ReadLine();
+                                while (response != "Got it")
+                                { }
                             }
                             System.Threading.Thread.Sleep(2000);
                         }
@@ -163,19 +144,84 @@ namespace Server
                 }
                 catch (Exception e)
                 {
-                    MessageBox.Show("Der BackupServer ist down!" + e);
-                    Console.ReadKey();
+                    MessageBox.Show("Der BackupServer ist nicht mehr erreichbar!" + e);
                 }
                 client.Close();
             }
             catch (Exception e)
             {
                 MessageBox.Show("Kein BackupServer zur Verfügung!" + e);
-
             }
 
         }
 
+        private void Connection()
+        {
+            while (true)
+            {
+                try
+                {
+                    Success();
+                }
+                catch(Exception e)
+                {
+                    Thread.Sleep(5000);
+                    Success();
+                    if (Success() == true)
+                    {
+                        MessageBox.Show("Erfolgreich Verbindung zw Server und Backup aufgenommen");
+                    }
+                }
+
+            }
+        }
+
+        private bool Success()
+        {
+            var localep = new IPEndPoint(IPAddress.Loopback, 0);
+            TcpClient client = new TcpClient(localep);
+
+            var remotep = new IPEndPoint(IPAddress.Loopback, 6666);
+            try
+            {
+                Thread.Sleep(10000);
+                client.Connect(remotep);
+                try
+                {
+                    using (NetworkStream stream = client.GetStream())
+                    {
+                        while (true)
+                        {
+                            using (var writer = new StreamWriter(stream, Encoding.ASCII, 4096, leaveOpen: true))
+                            {
+                                int itanzahl = Convert.ToInt32(Dispatcher.Invoke(() => tbIterations.Text));
+                                writer.WriteLine("Hello." + itanzahl.ToString());
+                            }
+                            using (var reader = new StreamReader(stream, Encoding.ASCII, true, 4096, leaveOpen: true))
+                            {
+                                string response = reader.ReadLine();
+                                while (response != "Got it")
+                                { }
+                            }
+                            Thread.Sleep(2000);
+                        }
+                    }
+                    
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show("Der BackupServer ist nicht mehr erreichbar!" + e);
+                    client.Close();
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Kein BackupServer zur Verfügung!" + e);
+                client.Close();
+                return false;
+            }
+        }
 
         private void FraktalAnzeigen(Bitmap verabeiteteDaten)
         {
@@ -197,31 +243,9 @@ namespace Server
                 });
             t2.Start();
         }
-        
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            //Dieser Code wird erst verwendet wenn wir erste Testclients haben!
-
-            /*
-            int countAvailablePcS = 0;
-            string[] availablePcS = new string[100];
-            bool isOn;
-            TcpClient expeditionClient = new TcpClient();
-
-            for (int i = 5460; i <= 5560; i++)
-            {
-                expeditionClient.Connect(IPAddress.Loopback,i);
-                isOn = expeditionClient.Client.Connected;
-                if (isOn == true)
-                {
-                    countAvailablePcS++;
-                    labelComputerAvailable.Content = countAvailablePcS;
-                    expeditionClient.Close();
-                }
-            }*/
-
-
-
 
         }
 
@@ -240,5 +264,6 @@ namespace Server
                 return bitmapimage;
             }
         }
+        
     }
 }
