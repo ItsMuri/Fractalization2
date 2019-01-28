@@ -5,32 +5,26 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Server"
         mc:Ignorable="d"
-        Title="MainWindow" Height="623.95" Width="950" Loaded="Window_Loaded">
+        Title="MainWindow" Height="583.95" Width="433" Loaded="Window_Loaded">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="101*" />
-            <ColumnDefinition Width="31*" />
+            <ColumnDefinition Width="400*" />
+            <ColumnDefinition Width="12*" />
         </Grid.ColumnDefinitions>
-        <Label Content="Computer(s) available:" HorizontalAlignment="Left" Margin="29,10,0,0" VerticalAlignment="Top"
-               Grid.Column="1" />
-        <Label Content="Iterations:" HorizontalAlignment="Left" Margin="29.455,182,0,0" VerticalAlignment="Top"
-               Grid.Column="1" />
-        <TextBox x:Name="tbIterations" HorizontalAlignment="Left" Height="20" Margin="91.455,186,0,0"
-                 TextWrapping="Wrap" VerticalAlignment="Top" Width="85" Grid.Column="1" Text="100" />
-        <Canvas x:Name="canvasDraw" HorizontalAlignment="Left" Height="113" Margin="10,10,0,0" VerticalAlignment="Top"
-                Width="586" Background="Blue" />
-        <Button x:Name="btnCalculate" Content="Calculate" HorizontalAlignment="Left" Margin="66.455,274,0,0"
-                VerticalAlignment="Top" Width="110" Height="45" Click="Button_Click" Grid.Column="1" />
+        <Label Content="Iterations:" HorizontalAlignment="Left" Margin="17,447,0,0" VerticalAlignment="Top" Height="26" Width="62" />
+        <TextBox x:Name="tbIterations" HorizontalAlignment="Left" Height="20" Margin="79,451,0,0"
+                 TextWrapping="Wrap" VerticalAlignment="Top" Width="85" Text="100" />
+        <Button x:Name="btnCalculate" Content="Calculate" HorizontalAlignment="Left" Margin="18,476,0,0"
+                VerticalAlignment="Top" Width="385" Height="45" Click="Button_Click" />
 
         <Label x:Name="labelComputerAvailable" Content="" Grid.Column="1" HorizontalAlignment="Left"
-               Margin="161,10,0,0" VerticalAlignment="Top" Height="36" Width="44" />
-        <Border x:Name="BorderImage" BorderThickness="0" BorderBrush="#FF000000" Width="400" Height="400"
-                Margin="10,146,311,47">
+               Margin="161,10,-193,0" VerticalAlignment="Top" Height="36" Width="44" />
+        <Border x:Name="BorderImage" BorderThickness="0" BorderBrush="#FF000000"
+                Margin="10,10,0,143">
             <Image x:Name="imageFraktal" HorizontalAlignment="Left"
                    VerticalAlignment="Top" Width="400" Height="400" RenderTransformOrigin="0.5,0.5"
                    MouseWheel="ImageFraktal_MouseWheel" MouseLeftButtonDown="ImageFraktal_MouseLeftButtonDown"
-                   MouseMove="ImageFraktal_MouseMove" MouseLeftButtonUp="ImageFraktal_MouseLeftButtonUp"
-                   Margin="-1">
+                   MouseMove="ImageFraktal_MouseMove" MouseLeftButtonUp="ImageFraktal_MouseLeftButtonUp">
                 <Image.RenderTransform>
                     <TransformGroup>
                         <ScaleTransform />
@@ -40,10 +34,10 @@
             </Image>
         </Border>
 
-        <Label Content="Amount of Clients:" Grid.Column="1" HorizontalAlignment="Left" Margin="30,97,0,0"
-               VerticalAlignment="Top" />
+        <Label Content="Amount of Clients:" HorizontalAlignment="Left" Margin="222,445,0,0"
+               VerticalAlignment="Top" Width="108" Height="26" />
         <ComboBox x:Name="CmbClientQuantity"
-                  Width="62"
+                  Width="68"
                   Height="25"
                   FontSize="12"
                   HorizontalAlignment="Center"
@@ -51,10 +45,9 @@
                   BorderThickness="0"
                   VerticalContentAlignment="Center"
                   Padding="15,0,0,0"
-                  Background="Transparent"
                   Foreground="Black"
                   IsEditable="True"
-                  Margin="143,98,16,0" Grid.Column="1">
+                  Margin="335,446,10,0">
             <ComboBoxItem Content="2" />
             <ComboBoxItem Content="4" />
         </ComboBox>

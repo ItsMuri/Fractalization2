@@ -81,7 +81,7 @@ namespace Client
                         //coordinates[1] = b;
                     } while (it <= fobj.IterationsCount);
                     //Console.WriteLine($"{x}:{y}:{it}");
-                    bm.SetPixel(x, y, it < fobj.IterationsCount ? Color.Red : Color.Blue);
+                    bm.SetPixel(x, y, it < fobj.IterationsCount ? Color.White : Color.Blue);
 
                 }
             }
