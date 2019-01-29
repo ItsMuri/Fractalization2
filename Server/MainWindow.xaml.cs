@@ -43,6 +43,122 @@ namespace Server
             //Vielleicht kann man das mit WriteableBitmap zeichnen lassen...
 
         }
+        private void Hello()
+        {
+            // Console.WriteLine("---Server---");
+            var localep = new IPEndPoint(IPAddress.Loopback, 0);
+            TcpClient client = new TcpClient(localep);
+
+            var remotep = new IPEndPoint(IPAddress.Loopback, 6666);
+            try
+            {
+                Thread.Sleep(10000);
+                client.Connect(remotep);
+                try
+                {
+                    using (NetworkStream stream = client.GetStream())
+                    {
+
+
+                        while (true)
+                        {
+                            using (var writer = new StreamWriter(stream, Encoding.ASCII, 4096, leaveOpen: true))
+                            {
+                                int itanzahl = Convert.ToInt32(Dispatcher.Invoke(() => tbIterations.Text));
+
+                                writer.WriteLine("Hello." + itanzahl.ToString());
+                            }
+                            using (var reader = new StreamReader(stream, Encoding.ASCII, true, 4096, leaveOpen: true))
+                            {
+                                string response = reader.ReadLine();
+                                while (response != "Got it")
+                                { }
+                            }
+                            System.Threading.Thread.Sleep(2000);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show("Der BackupServer ist nicht mehr erreichbar!" + e);
+                }
+                client.Close();
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Kein BackupServer zur Verfügung!" + e);
+            }
+
+        }
+
+        private void Connection()
+        {
+            while (true)
+            {
+                try
+                {
+                    Success();
+                }
+                catch (Exception e)
+                {
+                    Thread.Sleep(5000);
+                    Success();
+                    if (Success() == true)
+                    {
+                        MessageBox.Show("Erfolgreiche Verbindung zw Server und Backup aufgenommen");
+                    }
+                }
+
+            }
+        }
+
+        private bool Success()
+        {
+            var localep = new IPEndPoint(IPAddress.Loopback, 0);
+            TcpClient client = new TcpClient(localep);
+
+            var remotep = new IPEndPoint(IPAddress.Loopback, 6666);
+            try
+            {
+                Thread.Sleep(10000);
+                client.Connect(remotep);
+                try
+                {
+                    using (NetworkStream stream = client.GetStream())
+                    {
+                        while (true)
+                        {
+                            using (var writer = new StreamWriter(stream, Encoding.ASCII, 4096, leaveOpen: true))
+                            {
+                                int itanzahl = Convert.ToInt32(Dispatcher.Invoke(() => tbIterations.Text));
+                                writer.WriteLine("Hello." + itanzahl.ToString());
+                            }
+                            using (var reader = new StreamReader(stream, Encoding.ASCII, true, 4096, leaveOpen: true))
+                            {
+                                string response = reader.ReadLine();
+                                while (response != "Got it")
+                                { }
+                            }
+                            Thread.Sleep(2000);
+                        }
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show("Der BackupServer ist nicht mehr erreichbar!" + e);
+                    client.Close();
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Kein BackupServer zur Verfügung!" + e);
+                client.Close();
+                return false;
+            }
+        }
+
 
         private void ZeichneFraktal()
         {
