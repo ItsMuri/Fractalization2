@@ -169,7 +169,7 @@ namespace Server
                     Success();
                     if (Success() == true)
                     {
-                        MessageBox.Show("Erfolgreich Verbindung zw Server und Backup aufgenommen");
+                        MessageBox.Show("Erfolgreiche Verbindung zw Server und Backup aufgenommen");
                     }
                 }
 
