@@ -35,10 +35,21 @@ namespace Server
         private Point origin;
         private Point start;
 
+        private TcpListener listener;
         public MainWindow()
         {
             InitializeComponent();
-            
+
+            var localep = new IPEndPoint(IPAddress.Loopback, 3333);
+            listener = new TcpListener(localep);
+            listener.Start();
+
+            Task T = new Task(() =>
+            {
+                //Hello();
+                Connection();
+            });
+            T.Start();
             //Zeichnen lassen
             //Vielleicht kann man das mit WriteableBitmap zeichnen lassen...
 
