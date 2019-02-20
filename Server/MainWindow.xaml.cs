@@ -106,21 +106,10 @@ namespace Server
         {
             while (true)
             {
-                try
+                while(Success() == false)
                 {
-
                     Success();
                 }
-                catch (Exception e)
-                {
-                    Thread.Sleep(5000);
-                    Success();
-                    if (Success() == true)
-                    {
-                        MessageBox.Show("Erfolgreiche Verbindung zw Server und Backup aufgenommen");
-                    }
-                }
-
             }
         }
 
