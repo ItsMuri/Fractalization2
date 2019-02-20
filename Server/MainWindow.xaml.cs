@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.Serialization;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -95,14 +96,33 @@ namespace Server
             //Hier werden nun die Informationen gesendet
             using (TcpClient client = listener.AcceptTcpClient())
             {
+                AesCryptoServiceProvider cryptic = new AesCryptoServiceProvider();
+                //cryptic.Key = ASCIIEncoding.ASCII.GetBytes("KeyfuerAES");
+                //cryptic.IV = ASCIIEncoding.ASCII.GetBytes("KeyfuerAES");
+                cryptic.GenerateKey();
+                cryptic.GenerateIV();
+
                 using (NetworkStream stream = client.GetStream())
                 {
+                    //CryptoStream encryptStream = new CryptoStream(stream, cryptic.CreateEncryptor(), CryptoStreamMode.Write);
+
                     var serializer = new DataContractSerializer(typeof(PropsOfFractal));
+                    //serializer.WriteObject(encryptStream, myFraktal);
                     serializer.WriteObject(stream, myFraktal);
+                    //encryptStream.FlushFinalBlock();
+                    //encryptStream.Close();
                     client.Client.Shutdown(SocketShutdown.Send);
+                 
+                    //CryptoStream decryptStream = new CryptoStream(stream, cryptic.CreateDecryptor(), CryptoStreamMode.Read);
+                    //MessageBox.Show(decryptStream.ToString());
+                   // var verabeiteteDaten = (Bitmap)System.Drawing.Image.FromStream(decryptStream);
+                    
                     var BitmSerializer = new DataContractSerializer(typeof(Bitmap));
+                    //Bitmap verabeiteteDaten = (Bitmap)BitmSerializer.ReadObject(decryptStream);
                     Bitmap verabeiteteDaten = (Bitmap)BitmSerializer.ReadObject(stream);
                     FraktalAnzeigen(verabeiteteDaten);
+                    stream.Close();
+                   // decryptStream.Close();
                 };
             };
         }
@@ -159,20 +179,10 @@ namespace Server
         {
             while (true)
             {
-                try
+                while(Success() == false)
                 {
                     Success();
                 }
-                catch(Exception e)
-                {
-                    Thread.Sleep(5000);
-                    Success();
-                    if (Success() == true)
-                    {
-                        MessageBox.Show("Erfolgreiche Verbindung zw Server und Backup aufgenommen");
-                    }
-                }
-
             }
         }
 

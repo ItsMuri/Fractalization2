@@ -11,7 +11,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using SerializedFraktal;
-
+using System.Security.Cryptography;
+using System.Drawing.Imaging;
 
 namespace Client
 {
@@ -27,38 +28,9 @@ namespace Client
 
             Thread.Sleep(10000);
             ServerConnenction();
-            //TryToConnectServer();
-
-
-            //Console.ReadLine();
-            //Console.ReadKey();
         }
-        // Es wird alle 10 Sekunden versucht sich mit dem Hauptserver zu verbinden. Der Client versucht sich zu verbinden. Wenn die Verbindung erfolgreich war
-        // wird die Methode Server Connection erneut aufgerufen.
-        //public static bool TryToConnectServer()
-        //{
-        //    var localep = new IPEndPoint(IPAddress.Loopback, 0);
-        //    TcpClient client = new TcpClient(localep);
-        //    var remoteep = new IPEndPoint(IPAddress.Loopback, 3333);
 
-        //    try
-        //    {
-        //        Console.WriteLine("Versuche mit dem Haupt Server zu verbinden");
-        //        client.Connect(remoteep);
 
-        //        string ip = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
-        //        string port_client = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
-        //        Console.WriteLine($"Erneut verbunden mit Haupt Server {ip}, {port_client}");
-
-        //        client.Close();
-        //        return true;
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        return false;
-        //    }
-
-        //}
         //Derzeitiges Problem: Hauptserver +  client: Hauptserver sagt berechne, client schickt berechnung zurück und Server zeigt an.
         //Dann, obwohl der Hauptserver noch läuft, verbindet sich der Client mit dem Backup Server und wartet dort auf die neue Eingabe
         //und berechnet sie dann an den Backup
@@ -74,32 +46,13 @@ namespace Client
                 {
                     Console.WriteLine("Wechsle zu Backupserver");
                     ProcessRequests(2222);
-
-                    //Thread.Sleep(10000);
-                    //for (int i = 0; i <= 60; i++)
-                    //{
-                    //    bool ConnectionWorks = TryToConnectServer();
-                    //    if (ConnectionWorks == true)
-                    //    {
-                    //        ProcessRequests(3333);
-                    //        Console.WriteLine("Es hat geklappt");
-                    //        break;
-                    //    }
-                    //    else
-                    //    {
-                    //        Console.WriteLine("Leider kein bs verfügbar!");
-                    //        i++;
-                    //        Thread.Sleep(2000);
-                    //    }
-                    //}
-
                 }
                 else
                 {
                     Console.WriteLine("Wechsle zu Server");
                     ProcessRequests(3333);
                 }
-                Thread.Sleep(1000);
+                Thread.Sleep(2000);
             }
         }
 
@@ -110,47 +63,61 @@ namespace Client
 
             //while (true)
             //{
-                TcpClient client = new TcpClient(localep);
+            TcpClient client = new TcpClient(localep);
 
-                var remotep = new IPEndPoint(IPAddress.Loopback, port);
-                try
+            var remotep = new IPEndPoint(IPAddress.Loopback, port);
+            try
+            {
+                client.Connect(remotep);
+                string ip = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+                string port_client = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
+                if (port == 3333)
                 {
-                    client.Connect(remotep);
-                    string ip = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
-                    string port_client = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
-                    if (port == 3333)
-                    {
-                        Console.WriteLine($"Verbunden mit Server {ip}, {port_client}");
-                    }
-                    else if (port == 2222)
-                    {
-                        Console.WriteLine($"Verbunden mit Backup Server {ip}, {port_client}");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Verbunden mit Unbekanntem Server {ip}, {port_client}");
-                    }
+                    Console.WriteLine($"Verbunden mit Server {ip}, {port_client}");
+                }
+                else if (port == 2222)
+                {
+                    Console.WriteLine($"Verbunden mit Backup Server {ip}, {port_client}");
+                }
+                else
+                {
+                    Console.WriteLine($"Verbunden mit Unbekanntem Server {ip}, {port_client}");
+                }
 
-                    using (NetworkStream stream = client.GetStream())
-                    {
-                        Console.WriteLine("Iterating ...");
-                        var serializer = new DataContractSerializer(typeof(PropsOfFractal));
-                        PropsOfFractal fobj = (PropsOfFractal)serializer.ReadObject(stream);
+                AesCryptoServiceProvider cryptic = new AesCryptoServiceProvider();
+                //cryptic.Key = ASCIIEncoding.ASCII.GetBytes("KeyfuerAES");
+                //cryptic.IV = ASCIIEncoding.ASCII.GetBytes("KeyfuerAES");
+                cryptic.GenerateKey();
+                cryptic.GenerateIV();
 
-                        Bitmap bm = new Bitmap(400, 400);
-                        Calculate(fobj, ref bm);
 
-                        var ser = new DataContractSerializer(typeof(Bitmap));
-                        ser.WriteObject(stream, bm);
-                    }
-                    client.Close();
+                using (NetworkStream stream = client.GetStream())
+                {
+                    //CryptoStream decryptStream = new CryptoStream(stream, cryptic.CreateDecryptor(), CryptoStreamMode.Read);
+
+                    Console.WriteLine("Iterating ...");
+                    var serializer = new DataContractSerializer(typeof(PropsOfFractal));
+                    //PropsOfFractal fobj = (PropsOfFractal)serializer.ReadObject(decryptStream);
+                    PropsOfFractal fobj = (PropsOfFractal)serializer.ReadObject(stream);
+
+                    Bitmap bm = new Bitmap(400, 400);
+                    Calculate(fobj, ref bm);
+                    //decryptStream.Close();
+
+                    //CryptoStream encryptStream = new CryptoStream(stream, cryptic.CreateEncryptor(), CryptoStreamMode.Write);
+
+                    //bm.Save(encryptStream, ImageFormat.Bmp);
+                    //encryptStream.FlushFinalBlock();
+                    //encryptStream.Close();
+                }
+                client.Close();
                 return true;
-                }
-                catch (Exception e2)
-                {
-                    Console.WriteLine("Exception caught ..." + e2.Message);
-                    return false;
-                }
+            }
+            catch (Exception e2)
+            {
+                Console.WriteLine("Exception caught ..." + e2.Message);
+                return false;
+            }
             //}
         }
 
