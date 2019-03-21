@@ -18,6 +18,7 @@ namespace Client
 {
     class Program
     {
+        
         static void Main(string[] args)
         {
             Console.WriteLine("Awaiting Connection");
@@ -87,15 +88,29 @@ namespace Client
 
                     //Console.WriteLine($"{x}:{y}:{it}");
                     //bm.SetPixel(x, y, it < fobj.IterationsCount ? Color.Red : Color.Blue);
-                    /*Color.FromArgb(fobj.IterationsCount % 128 * 2, fobj.IterationsCount % 32 * 7,
-                        fobj.IterationsCount % 16 * 14);
-                        */
 
-                    bm.SetPixel(x, y,
-                        Color.FromArgb(fobj.IterationsCount % 128 * 2, fobj.IterationsCount % 32 * 7,
-                            fobj.IterationsCount % 16 * 14));
+
+                    /*bm.SetPixel(x, y,
+                        Color.FromArgb(100 + it, 20 + it,
+                            150 + it));*/
+                    //bm.SetPixel(x,y,Color.FromArgb(0,90,100+it,50+it));
+                    //mehrere nuancen
+
+                    bm.SetPixel(x,y,Color.FromArgb(0,20+it,60+it,20+it));
                 }
             }
         }
+
+        public static System.Drawing.Color VariousColors(int it)
+        {
+            
+            System.Drawing.Color c = new System.Drawing.Color();
+            
+            Color.FromArgb(1, 50, it, it);
+
+            return c;
+        }
+
+
     }
 }
