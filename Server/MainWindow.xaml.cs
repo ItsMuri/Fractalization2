@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -31,20 +30,15 @@ namespace Server
     /// </summary>
     public partial class MainWindow : Window
     {
-        private TcpListener listener; 
+        //private TcpListener listener;
+
         public MainWindow()
         {
             InitializeComponent();
-            var localep = new IPEndPoint(IPAddress.Loopback, 3333);
-            listener = new TcpListener(localep);
-            listener.Start();
+            
+            //Zeichnen lassen
+            //Vielleicht kann man das mit WriteableBitmap zeichnen lassen...
 
-            Task T = new Task(() =>
-            {
-                
-                Hello();
-            });
-            T.Start();
         }
 
         private void ZeichneFraktal()
@@ -56,17 +50,17 @@ namespace Server
             int cntInterations = Convert.ToInt32(Dispatcher.Invoke(() => tbIterations.Text));
             FraktalTask ft = new FraktalTask();
             // in ft werden die verschiedenen Koordinaten 
+            
 
+                //Versuche das Fraktal in 2 Sektoren zu unterteilen!!!
+                Bitmap bm = new Bitmap(Convert.ToInt32(imageFraktal.Width),Convert.ToInt32(imageFraktal.Height));
+                Bitmap lowerBm = new Bitmap(Convert.ToInt32(imageFraktal.Width/2), Convert.ToInt32(imageFraktal.Height/2));
+                //Haben jetzt zwei Bereiche, lowerBm ist der untere Bereich der Bitmap
+                //also in diesem Fall 200 x 200 bei einem Original von 400 x 400
+                //Idee: Färbe zuerst die 400 x 400 Fläche und danach die 200 x 200 Fläche
+        
 
-            //Versuche das Fraktal in 2 Sektoren zu unterteilen!!!
-            Bitmap bm = new Bitmap(Convert.ToInt32(imageFraktal.Width), Convert.ToInt32(imageFraktal.Height));
-            Bitmap lowerBm = new Bitmap(Convert.ToInt32(imageFraktal.Width / 2), Convert.ToInt32(imageFraktal.Height / 2));
-            //Haben jetzt zwei Bereiche, lowerBm ist der untere Bereich der Bitmap
-            //also in diesem Fall 200 x 200 bei einem Original von 400 x 400
-            //Idee: Färbe zuerst die 400 x 400 Fläche und danach die 200 x 200 Fläche
-
-
-            for (int x = 0; x < imageFraktal.Width; x++)
+        for (int x = 0; x < imageFraktal.Width; x++)
             {
                 for (int y = 0; y < imageFraktal.Height; y++)
                 {
@@ -93,111 +87,127 @@ namespace Server
 
                 }
             }
-
+            
 
 
             BitmapImage bmi = BitmapToImageSource(bm);
 
             imageFraktal.Source = bmi;
-
+            
         }
+
+        /*
+        private Task Empfangen()
+        {
+            //Hier wird dann später empfangen
+            
+        }
+        */
 
         private void Senden(PropsOfFractal myFraktal)
         {
             //Hier werden nun die Informationen gesendet
-            using (TcpClient client = listener.AcceptTcpClient())
+            TcpClient mySender = new TcpClient();
+            mySender.Connect(IPAddress.Loopback,5566);
+            NetworkStream netStream = mySender.GetStream();
+            var serializer = new DataContractSerializer(typeof(PropsOfFractal));
+            serializer.WriteObject(netStream, myFraktal);
+            mySender.Client.Shutdown(SocketShutdown.Send);
+            var BitmSerializer = new DataContractSerializer(typeof(Bitmap));
+            Bitmap verabeiteteDaten = (Bitmap)BitmSerializer.ReadObject(netStream);
+            netStream.Close();
+            mySender.Close();
+
+            FraktalAnzeigen(verabeiteteDaten);
+
+            /*
+            Task empfangen = new Task(() =>
             {
-                using (NetworkStream stream = client.GetStream())
-                {
-                    var serializer = new DataContractSerializer(typeof(PropsOfFractal));
-                    serializer.WriteObject(stream, myFraktal);
-                    client.Client.Shutdown(SocketShutdown.Send);
-                    var BitmSerializer = new DataContractSerializer(typeof(Bitmap));
-                    Bitmap verabeiteteDaten = (Bitmap)BitmSerializer.ReadObject(stream);
-                    FraktalAnzeigen(verabeiteteDaten);
-                };
-            };
-            
+                //var serializer = new DataContractSerializer(typeof(FraktalSrv));
+
+                //NetworkStream netStream = new NetworkStream(new Socket(SocketType.Stream, ProtocolType.Tcp));
+            });
+            empfangen.Start();
+            */
+
+            //Ich rufe als Abschluss nun also die Empfangsmethode auf.
         }
-
-        private void Hello()
-        {
-            // Console.WriteLine("---Server---");
-            var localep = new IPEndPoint(IPAddress.Loopback, 5555);
-            TcpClient client = new TcpClient(localep);
-
-            var remotep = new IPEndPoint(IPAddress.Loopback, 6666);
-            try
-            {
-                client.Connect(remotep);
-              
-                string ip = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
-                string port = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
-
-                try
-                {
-                    using (NetworkStream stream = client.GetStream())
-                    {
-
-
-                        int itanzahl = Convert.ToInt32(Dispatcher.Invoke(() => tbIterations.Text));
-                        
-                        using (var writer = new StreamWriter(stream, Encoding.ASCII, 4096, leaveOpen: true))
-                        {
-                            writer.Write(itanzahl);
-                        };
-
-                        while (true)
-                        {
-                            using (var writer = new StreamWriter(stream, Encoding.ASCII, 4096, leaveOpen: true))
-                            {
-                                writer.WriteLine("Hello");
-                            }
-                            using (var reader = new StreamReader(stream, Encoding.ASCII, true, 4096, leaveOpen: true))
-                            {
-                                string response = reader.ReadLine();
-                            }
-                            System.Threading.Thread.Sleep(2000);
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    MessageBox.Show("Der BackupServer ist down!" + e);
-                    Console.ReadKey();
-                }
-                client.Close();
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show("Kein BackupServer zur Verfügung!" + e);
-
-            }
-
-        }
-
 
         private void FraktalAnzeigen(Bitmap verabeiteteDaten)
         {
             //BitmapImage bmi = BitmapToImageSource(verabeiteteDaten);
             imageFraktal.Dispatcher.Invoke(() => imageFraktal.Source = BitmapToImageSource(verabeiteteDaten));
-            MessageBox.Show("Fertig");
+            //Color.FromArgb(loopgo % 128 * 2, loopgo % 32 * 7, loopgo % 16 * 14); Mögl. färben des Fraktals
         }
+
+        /*private void Button_Loaded(object sender, RoutedEventArgs e)
+        {
+            Task.Run(() =>
+            {
+                listener = new TcpListener(IPAddress.Loopback, 5566);
+                listener.Start();
+            });
+        }*/
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+            //Task t = CalculateTask();
+            //ZeichneFraktal();
+
+
             int iterationsCount = Convert.ToInt32(tbIterations.Text);
-            PropsOfFractal myFraktal = new PropsOfFractal(iterationsCount);
+            SerializedFraktal.PropsOfFractal myFraktal = new PropsOfFractal(iterationsCount);
             myFraktal.imgWidth = imageFraktal.Width;
             myFraktal.imgHeight = imageFraktal.Height;
+            //FraktalSrv myFraktal = new FraktalSrv(iterationsCount);
+            
+            /*double[] xCoordinates = new double[5];
+            for (int i = 0; i < 5; i++)
+            {
+                xCoordinates[i] = -2.0 + i;
+            }
+            myFraktal.KoordinatenX = xCoordinates; //X Koordinaten gesetzt!
+            double[] ycoordinates = new double[2];
+            double imaginaryNumber = Math.Sqrt(-1);
+            ycoordinates[0] = Math.Sqrt(-imaginaryNumber);
+            ycoordinates[1] = Math.Sqrt(imaginaryNumber);
+            myFraktal.KoordinatenY = ycoordinates; //Y Koordinaten gesetzt!
+            */
 
-            Task t2 = new Task(() =>
-                {
-                    Senden(myFraktal);
-                });
-            t2.Start();
+            Task senden = new Task(() =>
+            {
+                Senden(myFraktal);
+            });
+            senden.Start();
         }
-        
+
+        /*private async Task CalculateTask()
+        {
+            while (true)
+            {
+                TcpClient tcpClient = await listener.AcceptTcpClientAsync();
+
+                using (NetworkStream stream = tcpClient.GetStream())
+                {
+                    while (true)
+                    {
+                        using (var writer = new StreamWriter(stream, Encoding.ASCII, 4096, leaveOpen: true))
+                        {
+                            string str = Convert.ToString("Connection established");
+                            writer.WriteLine(str);
+                        }
+
+                        using (var reader =
+                            new StreamReader(stream, Encoding.ASCII, true, 4096, leaveOpen: true))
+                        {
+                            string answer = reader.ReadLine();
+                            MessageBox.Show($"{answer}");
+                        }
+                    }
+                }
+            }
+        }*/
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             //Dieser Code wird erst verwendet wenn wir erste Testclients haben!
@@ -220,7 +230,7 @@ namespace Server
                 }
             }*/
 
-
+            
 
 
         }

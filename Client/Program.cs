@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using SerializedFraktal;
+
 //using Server;
 
 namespace Client
@@ -20,79 +21,37 @@ namespace Client
         static void Main(string[] args)
         {
             Console.WriteLine("Awaiting Connection");
-
-            ServerConnenction();
+            //AsyncMain().Start();
+            //AsyncMain().Wait();
+            AsyncMain();
 
             Console.ReadKey();
         }
 
-
-
-        public static void ServerConnenction()
+        //static async Task AsyncMain()
+        private static void AsyncMain()
         {
-            Console.WriteLine("---Client1---");
-            var localep = new IPEndPoint(IPAddress.Loopback, 0);
-            TcpClient client = new TcpClient(localep);
-
-            var remotep = new IPEndPoint(IPAddress.Loopback, 3333);
-            try
+            TcpListener myListener = new TcpListener(IPAddress.Loopback, 5566);
+            myListener.Start();
+            while (true)
             {
-                client.Connect(remotep);
-                string ip = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
-                string port = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
-                Console.WriteLine($"Verbunden mit Hauptserver {ip}, {port}");
-                
-                    using (NetworkStream stream = client.GetStream())
-                    {
-                        var serializer = new DataContractSerializer(typeof(PropsOfFractal));
-                        PropsOfFractal fobj = (PropsOfFractal)serializer.ReadObject(stream);
+                TcpClient client = myListener.AcceptTcpClient();
 
-                        Bitmap bm = new Bitmap(400, 400);
-                        Calculate(fobj, ref bm);
 
-                        var ser = new DataContractSerializer(typeof(Bitmap));
-                        ser.WriteObject(stream, bm);
-                    }
-                
-            }
-            catch (Exception)
-            {
-
-                Console.WriteLine("Wechsle zu Backupserver");
-                var bremoteep = new IPEndPoint(IPAddress.Loopback, 2222);
-                TcpClient client2 = new TcpClient(localep);
-
-                try
+                using (NetworkStream stream = client.GetStream())
                 {
-                    client2.Connect(bremoteep);
-                    string ip = ((IPEndPoint)client2.Client.RemoteEndPoint).Address.ToString();
-                    string port = ((IPEndPoint)client2.Client.RemoteEndPoint).Port.ToString();
-                    Console.WriteLine($"Verbunden mit BackupServer {ip}, {port}");
-                    
-                        using (NetworkStream stream = client2.GetStream())
-                        {
-                            using (StreamWriter writer = new StreamWriter(stream, Encoding.ASCII, 2048, true))
-                            {
-                                var serializer = new DataContractSerializer(typeof(PropsOfFractal));
-                                PropsOfFractal fobj = (PropsOfFractal)serializer.ReadObject(stream);
+                    var serializer = new DataContractSerializer(typeof(PropsOfFractal));
+                    PropsOfFractal fobj = (PropsOfFractal) serializer.ReadObject(stream);
 
-                                Bitmap bm = new Bitmap(400, 400);
-                                Calculate(fobj, ref bm);
+                    Bitmap bm = new Bitmap(400, 400);
+                    Calculate(fobj, ref bm);
 
-                                var ser = new DataContractSerializer(typeof(Bitmap));
-                                ser.WriteObject(stream, bm);
-                            }
-                            System.Threading.Thread.Sleep(2000);
-                        }
-                    
-
+                    var ser = new DataContractSerializer(typeof(Bitmap));
+                    ser.WriteObject(stream, bm);
                 }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                }
+
+                client.Close();
             }
-            Console.ReadKey();
         }
 
         private static void Calculate(PropsOfFractal fobj, ref Bitmap bm)
@@ -101,8 +60,8 @@ namespace Client
             {
                 for (int y = 0; y < fobj.imgHeight; y++)
                 {
-                    double a = (double)(x - fobj.imgWidth / 2) / (double)(fobj.imgWidth / 4);
-                    double b = (double)(y - fobj.imgHeight / 2) / (double)(fobj.imgHeight / 4);
+                    double a = (double) (x - fobj.imgWidth / 2) / (double) (fobj.imgWidth / 4);
+                    double b = (double) (y - fobj.imgHeight / 2) / (double) (fobj.imgHeight / 4);
                     ComplexClnt c = new ComplexClnt(a, b);
                     ComplexClnt z = new ComplexClnt(0, 0);
                     int it = 0;
@@ -117,13 +76,24 @@ namespace Client
                         z.Square();
                         z.Add(c);
 
-                        if (z.Magnitude() > 2.0) { break; }
+                        if (z.Magnitude() > 2.0)
+                        {
+                            break;
+                        }
 
                         //coordinates[0] = a;
                         //coordinates[1] = b;
                     } while (it <= fobj.IterationsCount);
+
                     //Console.WriteLine($"{x}:{y}:{it}");
-                    bm.SetPixel(x, y, it < fobj.IterationsCount ? Color.Red : Color.Blue);
+                    //bm.SetPixel(x, y, it < fobj.IterationsCount ? Color.Red : Color.Blue);
+                    /*Color.FromArgb(fobj.IterationsCount % 128 * 2, fobj.IterationsCount % 32 * 7,
+                        fobj.IterationsCount % 16 * 14);
+                        */
+
+                    bm.SetPixel(x, y,
+                        Color.FromArgb(fobj.IterationsCount % 128 * 2, fobj.IterationsCount % 32 * 7,
+                            fobj.IterationsCount % 16 * 14));
                 }
             }
         }
