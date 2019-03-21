@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using SerializedFraktal;
 using System.Security.Cryptography;
 using System.Drawing.Imaging;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace Client
 {
@@ -26,7 +27,7 @@ namespace Client
 
             Console.WriteLine("Awaiting Connection");
 
-            Thread.Sleep(10000);
+            Thread.Sleep(3000);
             ServerConnenction();
         }
 
@@ -59,13 +60,13 @@ namespace Client
 
         private static bool ProcessRequests(int port)
         {
-            var localep = new IPEndPoint(IPAddress.Loopback, 0);
+            var localep = new IPEndPoint(IPAddress.Any, 0);
 
             //while (true)
             //{
             TcpClient client = new TcpClient(localep);
 
-            var remotep = new IPEndPoint(IPAddress.Loopback, port);
+            var remotep = new IPEndPoint(IPAddress.Broadcast, port);
             try
             {
                 client.Connect(remotep);
@@ -85,30 +86,42 @@ namespace Client
                 }
 
                 AesCryptoServiceProvider cryptic = new AesCryptoServiceProvider();
-                //cryptic.Key = ASCIIEncoding.ASCII.GetBytes("KeyfuerAES");
-                //cryptic.IV = ASCIIEncoding.ASCII.GetBytes("KeyfuerAES");
-                cryptic.GenerateKey();
-                cryptic.GenerateIV();
+
+                string key = "Tg6VU5ZzKjNrR0UoYrVVgPdZafNtLT4XSwyWQRvna1w=";
+                string IV = "NjjwRHuRPEgLAT0qD+0UaQ==";
+
+                byte[] keybyte = Convert.FromBase64String(key);
+                byte[] ivbyte = Convert.FromBase64String(IV);
+
+
+                cryptic.Key = keybyte;
+                cryptic.IV = ivbyte;
+
+                //cryptic.GenerateKey();
+                //cryptic.GenerateIV();
 
 
                 using (NetworkStream stream = client.GetStream())
                 {
-                    //CryptoStream decryptStream = new CryptoStream(stream, cryptic.CreateDecryptor(), CryptoStreamMode.Read);
+                    CryptoStream decryptStream = new CryptoStream(stream, cryptic.CreateDecryptor(), CryptoStreamMode.Read);
 
                     Console.WriteLine("Iterating ...");
                     var serializer = new DataContractSerializer(typeof(PropsOfFractal));
-                    //PropsOfFractal fobj = (PropsOfFractal)serializer.ReadObject(decryptStream);
-                    PropsOfFractal fobj = (PropsOfFractal)serializer.ReadObject(stream);
+                    PropsOfFractal fobj = (PropsOfFractal)serializer.ReadObject(decryptStream);
 
                     Bitmap bm = new Bitmap(400, 400);
                     Calculate(fobj, ref bm);
-                    //decryptStream.Close();
 
-                    //CryptoStream encryptStream = new CryptoStream(stream, cryptic.CreateEncryptor(), CryptoStreamMode.Write);
+                    CryptoStream encryptStream = new CryptoStream(stream, cryptic.CreateEncryptor(), CryptoStreamMode.Write);
 
-                    //bm.Save(encryptStream, ImageFormat.Bmp);
-                    //encryptStream.FlushFinalBlock();
-                    //encryptStream.Close();
+                    bm.Save(encryptStream, ImageFormat.Bmp);
+                   
+                    encryptStream.FlushFinalBlock();
+                    encryptStream.Close();
+
+                    decryptStream.Close();
+
+                    client.Client.Shutdown(SocketShutdown.Send);
                 }
                 client.Close();
                 return true;
