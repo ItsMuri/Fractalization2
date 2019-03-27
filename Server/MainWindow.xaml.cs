@@ -41,7 +41,7 @@ namespace Server
 
         }
 
-        private void ZeichneFraktal()
+        /*private void ZeichneFraktal()
         {
             // Bitmap zum Zeichnen des Fraktals verwenden!
             //Referenz auf Video YT in liked Liste!
@@ -93,8 +93,11 @@ namespace Server
             BitmapImage bmi = BitmapToImageSource(bm);
 
             imageFraktal.Source = bmi;
-            
+
+            MessageBox.Show("Fertig!");
+
         }
+        */
 
         /*
         private Task Empfangen()
@@ -137,6 +140,7 @@ namespace Server
         {
             //BitmapImage bmi = BitmapToImageSource(verabeiteteDaten);
             imageFraktal.Dispatcher.Invoke(() => imageFraktal.Source = BitmapToImageSource(verabeiteteDaten));
+            MessageBox.Show("Fertig!");
             //Color.FromArgb(loopgo % 128 * 2, loopgo % 32 * 7, loopgo % 16 * 14); Mögl. färben des Fraktals
         }
 

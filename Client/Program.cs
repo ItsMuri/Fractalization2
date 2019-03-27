@@ -96,9 +96,11 @@ namespace Client
                     //bm.SetPixel(x,y,Color.FromArgb(0,90,100+it,50+it));
                     //mehrere nuancen
 
-                    var faktor = 255 / it;
+                    var faktor = 255 / (it*2);
+                    //var faktor = 255 / it;
 
-                    bm.SetPixel(x,y,Color.FromArgb(0,20+faktor,60+faktor,20+faktor));
+
+                    bm.SetPixel(x,y,Color.FromArgb(0,60+faktor,0+faktor,70+faktor));
                 }
             }
         }
