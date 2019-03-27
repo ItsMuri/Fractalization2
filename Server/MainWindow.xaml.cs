@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -22,6 +23,7 @@ using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Newtonsoft.Json;
 using SerializedFraktal;
 using Color = System.Drawing.Color;
 
@@ -36,13 +38,17 @@ namespace Server
         public MainWindow()
         {
             InitializeComponent();
-            var localep = new IPEndPoint(IPAddress.Loopback, 3333);
+
+            var ipfromFile = File.ReadAllLines(@"config.cfg");
+            IPAddress.TryParse(ipfromFile[0], out IPAddress ipServer);
+            IPAddress.TryParse(ipfromFile[1], out IPAddress ipBackup);
+
+            var localep = new IPEndPoint(ipServer, 3333);
             listener = new TcpListener(localep);
             listener.Start();
 
             Task T = new Task(() =>
             {
-                //Hello();
                 Connection();
             });
             T.Start();
@@ -50,7 +56,6 @@ namespace Server
 
         private void ZeichneFraktal()
         {
-
             int cntInterations = Convert.ToInt32(Dispatcher.Invoke(() => tbIterations.Text));
             FraktalTask ft = new FraktalTask();
             // in ft werden die verschiedenen 
@@ -97,101 +102,67 @@ namespace Server
             using (TcpClient client = listener.AcceptTcpClient())
             {
                 AesCryptoServiceProvider cryptic = new AesCryptoServiceProvider();
-                //cryptic.Key = ASCIIEncoding.ASCII.GetBytes("KeyfuerAES");
-                //cryptic.IV = ASCIIEncoding.ASCII.GetBytes("KeyfuerAES");
-                cryptic.GenerateKey();
-                cryptic.GenerateIV();
+                string key = "Tg6VU5ZzKjNrR0UoYrVVgPdZafNtLT4XSwyWQRvna1w=";
+                string IV = "NjjwRHuRPEgLAT0qD+0UaQ==";
+
+                byte[] keybyte = Convert.FromBase64String(key);
+                byte[] ivbyte = Convert.FromBase64String(IV);
+
+
+               cryptic.Key = keybyte;
+                cryptic.IV = ivbyte;
+
+                //cryptic.GenerateKey();
+                //cryptic.GenerateIV();
+
+                //string k = Convert.ToBase64String(cryptic.Key);
+                //string iv = Convert.ToBase64String(cryptic.IV);
 
                 using (NetworkStream stream = client.GetStream())
                 {
-                    //CryptoStream encryptStream = new CryptoStream(stream, cryptic.CreateEncryptor(), CryptoStreamMode.Write);
+                    CryptoStream encryptStream = new CryptoStream(stream, cryptic.CreateEncryptor(), CryptoStreamMode.Write);
 
                     var serializer = new DataContractSerializer(typeof(PropsOfFractal));
-                    //serializer.WriteObject(encryptStream, myFraktal);
-                    serializer.WriteObject(stream, myFraktal);
-                    //encryptStream.FlushFinalBlock();
-                    //encryptStream.Close();
+                    serializer.WriteObject(encryptStream, myFraktal);
+                   
+                    encryptStream.FlushFinalBlock();
+                    
                     client.Client.Shutdown(SocketShutdown.Send);
                  
-                    //CryptoStream decryptStream = new CryptoStream(stream, cryptic.CreateDecryptor(), CryptoStreamMode.Read);
-                    //MessageBox.Show(decryptStream.ToString());
-                   // var verabeiteteDaten = (Bitmap)System.Drawing.Image.FromStream(decryptStream);
+                    CryptoStream decryptStream = new CryptoStream(stream, cryptic.CreateDecryptor(), CryptoStreamMode.Read);
+                    var verabeiteteDaten = (Bitmap)System.Drawing.Image.FromStream(decryptStream);
                     
-                    var BitmSerializer = new DataContractSerializer(typeof(Bitmap));
-                    //Bitmap verabeiteteDaten = (Bitmap)BitmSerializer.ReadObject(decryptStream);
-                    Bitmap verabeiteteDaten = (Bitmap)BitmSerializer.ReadObject(stream);
+                    //var BitmSerializer = new DataContractSerializer(typeof(Bitmap));
+                   // Bitmap verabeiteteDaten = (Bitmap)BitmSerializer.ReadObject(decryptStream);
+                    //Bitmap verabeiteteDaten = (Bitmap)BitmSerializer.ReadObject(stream);
                     FraktalAnzeigen(verabeiteteDaten);
+
+                    decryptStream.Close();
+
                     stream.Close();
-                   // decryptStream.Close();
                 };
             };
         }
 
-        private void Hello()
-        {
-            // Console.WriteLine("---Server---");
-            var localep = new IPEndPoint(IPAddress.Loopback, 0);
-            TcpClient client = new TcpClient(localep);
-
-            var remotep = new IPEndPoint(IPAddress.Loopback, 6666);
-            try
-            {
-                Thread.Sleep(10000);
-                client.Connect(remotep);
-                try
-                {
-                    using (NetworkStream stream = client.GetStream())
-                    {
-
-                        
-                        while (true)
-                        {
-                            using (var writer = new StreamWriter(stream, Encoding.ASCII, 4096, leaveOpen: true))
-                            {
-                               int itanzahl = Convert.ToInt32(Dispatcher.Invoke(() => tbIterations.Text));
-
-                                writer.WriteLine("Hello." + itanzahl.ToString());
-                            }
-                            using (var reader = new StreamReader(stream, Encoding.ASCII, true, 4096, leaveOpen: true))
-                            {
-                                string response = reader.ReadLine();
-                                while (response != "Got it")
-                                { }
-                            }
-                            System.Threading.Thread.Sleep(2000);
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    MessageBox.Show("Der BackupServer ist nicht mehr erreichbar!" + e);
-                }
-                client.Close();
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show("Kein BackupServer zur Verfügung!" + e);
-            }
-
-        }
 
         private void Connection()
         {
             while (true)
             {
-                while(Success() == false)
-                {
-                    Success();
-                }
+                Hello();
             }
         }
 
-        private bool Success()
+        private bool Hello()
         {
-            var localep = new IPEndPoint(IPAddress.Loopback, 0);
+            var ipfromFile = File.ReadAllLines(@"config.cfg");
+            IPAddress.TryParse(ipfromFile[0], out IPAddress ipServer);
+            IPAddress.TryParse(ipfromFile[1], out IPAddress ipBackup);
+
+            var localep = new IPEndPoint(ipServer, 0);
             TcpClient client = new TcpClient(localep);
 
-            var remotep = new IPEndPoint(IPAddress.Loopback, 6666);
+            var remotep = new IPEndPoint(ipBackup, 6666);
             try
             {
                 Thread.Sleep(10000);
@@ -210,8 +181,10 @@ namespace Server
                             using (var reader = new StreamReader(stream, Encoding.ASCII, true, 4096, leaveOpen: true))
                             {
                                 string response = reader.ReadLine();
-                                while (response != "Got it")
-                                { }
+                                if (response != "Got it")
+                                {
+                                    throw new Exception();
+                                }
                             }
                             Thread.Sleep(2000);
                         }

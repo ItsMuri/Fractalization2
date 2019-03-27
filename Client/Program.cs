@@ -13,102 +13,110 @@ using System.Windows.Media.Imaging;
 using SerializedFraktal;
 using System.Security.Cryptography;
 using System.Drawing.Imaging;
-
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.Serialization.Json;
+using SerializedFraktal;
 namespace Client
 {
     class Program
     {
 
-
         static void Main(string[] args)
         {
-            Console.WriteLine("---Client1---");
+            Console.WriteLine("---Client---");
 
             Console.WriteLine("Awaiting Connection");
 
-            Thread.Sleep(10000);
+            Thread.Sleep(3000);
             ServerConnenction();
         }
 
-
-        //Derzeitiges Problem: Hauptserver +  client: Hauptserver sagt berechne, client schickt berechnung zurück und Server zeigt an.
-        //Dann, obwohl der Hauptserver noch läuft, verbindet sich der Client mit dem Backup Server und wartet dort auf die neue Eingabe
-        //und berechnet sie dann an den Backup
-
         public static void ServerConnenction()
         {
-            // Forschleife anzahl versuche / min überprüfen muss noch gemacht werden
+            var ipfromFile = File.ReadAllLines(@"config.cfg");
+
+            IPAddress.TryParse(ipfromFile[0], out IPAddress ipServer);
+            IPAddress.TryParse(ipfromFile[1], out IPAddress ipBackup);
+
             while (true)
             {
-                bool success = ProcessRequests(3333);
+                bool success = ProcessRequests(ipServer, 3333);
 
                 if (!success)
                 {
                     Console.WriteLine("Wechsle zu Backupserver");
-                    ProcessRequests(2222);
+                    ProcessRequests(ipBackup, 2222);
                 }
                 else
                 {
                     Console.WriteLine("Wechsle zu Server");
-                    ProcessRequests(3333);
+                    ProcessRequests(ipServer, 3333);
                 }
                 Thread.Sleep(2000);
             }
         }
 
 
-        private static bool ProcessRequests(int port)
+        private static bool ProcessRequests(IPAddress IpAddress, int port)
         {
-            var localep = new IPEndPoint(IPAddress.Loopback, 0);
+            var localep = new IPEndPoint(IPAddress.Any, 0);
 
-            //while (true)
-            //{
             TcpClient client = new TcpClient(localep);
 
-            var remotep = new IPEndPoint(IPAddress.Loopback, port);
+            var ipfromFile = File.ReadAllLines(@"config.cfg");
+            IPAddress.TryParse(ipfromFile[0], out IPAddress ipServer);
+
+            var remotep = new IPEndPoint(ipServer, port);
             try
             {
                 client.Connect(remotep);
                 string ip = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
                 string port_client = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
-                if (port == 3333)
+
+                if (remotep.Port == 3333)
                 {
                     Console.WriteLine($"Verbunden mit Server {ip}, {port_client}");
                 }
-                else if (port == 2222)
+                else if (remotep.Port == 2222)
                 {
-                    Console.WriteLine($"Verbunden mit Backup Server {ip}, {port_client}");
-                }
-                else
-                {
-                    Console.WriteLine($"Verbunden mit Unbekanntem Server {ip}, {port_client}");
+                    Console.WriteLine($"Verbunden mit Backup-Server {ip}, {port_client}");
                 }
 
                 AesCryptoServiceProvider cryptic = new AesCryptoServiceProvider();
-                //cryptic.Key = ASCIIEncoding.ASCII.GetBytes("KeyfuerAES");
-                //cryptic.IV = ASCIIEncoding.ASCII.GetBytes("KeyfuerAES");
-                cryptic.GenerateKey();
-                cryptic.GenerateIV();
 
+                string key = "Tg6VU5ZzKjNrR0UoYrVVgPdZafNtLT4XSwyWQRvna1w=";
+                string IV = "NjjwRHuRPEgLAT0qD+0UaQ==";
+
+                byte[] keybyte = Convert.FromBase64String(key);
+                byte[] ivbyte = Convert.FromBase64String(IV);
+
+                cryptic.Key = keybyte;
+                cryptic.IV = ivbyte;
+
+                //cryptic.GenerateKey();
+                //cryptic.GenerateIV();
 
                 using (NetworkStream stream = client.GetStream())
                 {
-                    //CryptoStream decryptStream = new CryptoStream(stream, cryptic.CreateDecryptor(), CryptoStreamMode.Read);
+                    CryptoStream decryptStream = new CryptoStream(stream, cryptic.CreateDecryptor(), CryptoStreamMode.Read);
 
                     Console.WriteLine("Iterating ...");
                     var serializer = new DataContractSerializer(typeof(PropsOfFractal));
-                    //PropsOfFractal fobj = (PropsOfFractal)serializer.ReadObject(decryptStream);
-                    PropsOfFractal fobj = (PropsOfFractal)serializer.ReadObject(stream);
+                    PropsOfFractal fobj = (PropsOfFractal)serializer.ReadObject(decryptStream);
 
                     Bitmap bm = new Bitmap(400, 400);
                     Calculate(fobj, ref bm);
-                    //decryptStream.Close();
 
-                    //CryptoStream encryptStream = new CryptoStream(stream, cryptic.CreateEncryptor(), CryptoStreamMode.Write);
+                    CryptoStream encryptStream = new CryptoStream(stream, cryptic.CreateEncryptor(), CryptoStreamMode.Write);
 
-                    //bm.Save(encryptStream, ImageFormat.Bmp);
-                    //encryptStream.FlushFinalBlock();
-                    //encryptStream.Close();
+                    bm.Save(encryptStream, ImageFormat.Bmp);
+
+                    encryptStream.FlushFinalBlock();
+                    encryptStream.Close();
+
+                    decryptStream.Close();
+
+                    client.Client.Shutdown(SocketShutdown.Send);
                 }
                 client.Close();
                 return true;
@@ -118,7 +126,6 @@ namespace Client
                 Console.WriteLine("Exception caught ..." + e2.Message);
                 return false;
             }
-            //}
         }
 
         private static void Calculate(PropsOfFractal fobj, ref Bitmap bm)
@@ -132,11 +139,6 @@ namespace Client
                     ComplexClnt c = new ComplexClnt(a, b);
                     ComplexClnt z = new ComplexClnt(0, 0);
                     int it = 0;
-                    //double[] coordinates =
-                    //{
-                    //    a, b
-                    //};
-
                     do
                     {
                         it++;
@@ -145,10 +147,9 @@ namespace Client
 
                         if (z.Magnitude() > 2.0) { break; }
 
-                        //coordinates[0] = a;
-                        //coordinates[1] = b;
+                        
                     } while (it <= fobj.IterationsCount);
-                    //Console.WriteLine($"{x}:{y}:{it}");
+             
                     bm.SetPixel(x, y, it < fobj.IterationsCount ? Color.Red : Color.Blue);
                 }
             }
