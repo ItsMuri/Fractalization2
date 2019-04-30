@@ -166,12 +166,14 @@ namespace Server
         {
             int Id = 0;
             bitmapDict = new Dictionary<int, Bitmap>();
+            int counter = 0;
 
             while (true)
             {
                 var mySender = listener.AcceptTcpClient();
                 listConnectedClients.Add(mySender);
                 Dispatcher.Invoke(() => labelComputerAvailable.Content = listConnectedClients.Count);
+                counter++;
 
                 Task.Factory.StartNew((object state) =>
                 {
@@ -198,13 +200,17 @@ namespace Server
                     mySender.Close();
 
                     //bitmapList.Add(verarbeiteteDaten);
-                    bitmapDict.Add(internalID, verarbeiteteDaten);
+                    //bitmapDict.Add(internalID, verarbeiteteDaten);
 
                     //if ((internalID + 1).ToString() == myFraktal.clientCount.ToString())
                     verarbeiteteDaten.Save($"bitmap{internalID}.jpg");
                     ////FraktalAnzeigenOld(bitmapDict);
                     FraktalAnzeigen(internalID, verarbeiteteDaten);
+                    
                 }, Id++);
+
+                if (counter == Convert.ToInt32(Dispatcher.Invoke(() => CmbClientQuantity.Text)))
+                    break;
             }
         }
 

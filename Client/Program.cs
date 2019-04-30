@@ -20,28 +20,28 @@ namespace Client
     {
         static void Main(string[] args)
         {
-            Console.ReadKey();
-            TcpClient client = new TcpClient(new IPEndPoint(IPAddress.Any, 0));
-            client.Connect(IPAddress.Loopback, 2222);
-            Console.WriteLine("Connected");
-
-            using (NetworkStream stream = client.GetStream())
+            while (true)
             {
-                var serializer = new DataContractSerializer(typeof(PropsOfFractal));
-                PropsOfFractal fobj = (PropsOfFractal)serializer.ReadObject(stream);
+                Console.ReadKey();
+                TcpClient client = new TcpClient(new IPEndPoint(IPAddress.Any, 0));
+                client.Connect(IPAddress.Loopback, 2222);
+                Console.WriteLine("Connected");
 
-                int stripe = (int)fobj.ImgWidth / fobj.ClientCount;
-                Bitmap bm = new Bitmap(stripe, Convert.ToInt32(fobj.ImgHeight));
-                Calculate(fobj, stripe, ref bm);
+                using (NetworkStream stream = client.GetStream())
+                {
+                    var serializer = new DataContractSerializer(typeof(PropsOfFractal));
+                    PropsOfFractal fobj = (PropsOfFractal)serializer.ReadObject(stream);
 
-                var ser = new DataContractSerializer(typeof(Bitmap));
-                ser.WriteObject(stream, bm);
+                    int stripe = (int)fobj.ImgWidth / fobj.ClientCount;
+                    Bitmap bm = new Bitmap(stripe, Convert.ToInt32(fobj.ImgHeight));
+                    Calculate(fobj, stripe, ref bm);
+
+                    var ser = new DataContractSerializer(typeof(Bitmap));
+                    ser.WriteObject(stream, bm);
+                }
+
+                client.Close();
             }
-
-            client.Close();
-
-            Console.ReadKey();
-
         }
 
         private static void Calculate(PropsOfFractal fobj, int stripe, ref Bitmap bm)
