@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
-using SerializedFraktal;
+using FractalLibrary;
 
 //using Server;
 
@@ -20,48 +20,66 @@ namespace Client
     {
         static void Main(string[] args)
         {
-            //AsyncMain().Start();
-            //AsyncMain().Wait();
-            AsyncMain();
-
             Console.ReadKey();
-        }
-
-        //static async Task AsyncMain()
-        private static void AsyncMain()
-        {
-            //TcpListener myListener = new TcpListener(IPAddress.Loopback, 5566);
-            //myListener.Start();
             TcpClient client = new TcpClient(new IPEndPoint(IPAddress.Any, 0));
             client.Connect(IPAddress.Loopback, 2222);
             Console.WriteLine("Connected");
 
-            //while (true)
-            //{
-            //TcpClient client = client.AcceptTcpClient();
-
-
             using (NetworkStream stream = client.GetStream())
             {
                 var serializer = new DataContractSerializer(typeof(PropsOfFractal));
-                PropsOfFractal fobj = (PropsOfFractal) serializer.ReadObject(stream);
+                PropsOfFractal fobj = (PropsOfFractal)serializer.ReadObject(stream);
 
-                Bitmap bm = new Bitmap(Convert.ToInt32(fobj.imgWidth), Convert.ToInt32(fobj.imgHeight));
-                Calculate(fobj, ref bm);
+                int stripe = (int)fobj.ImgWidth / fobj.ClientCount;
+                Bitmap bm = new Bitmap(stripe, Convert.ToInt32(fobj.ImgHeight));
+                Calculate(fobj, stripe, ref bm);
 
                 var ser = new DataContractSerializer(typeof(Bitmap));
                 ser.WriteObject(stream, bm);
             }
 
             client.Close();
-            //}
+
+            Console.ReadKey();
+
         }
 
-        private static void Calculate(PropsOfFractal fobj, ref Bitmap bm)
+        private static void Calculate(PropsOfFractal fobj, int stripe, ref Bitmap bm)
         {
-            Console.WriteLine("ID: " + fobj.ID);
+            Console.WriteLine("ID: " + fobj.Id);
+            int myStripeBegin = stripe * fobj.Id;
 
-            if (fobj.ID == 1)
+            // x and y are the coordinates in the bitmap image that represents a stripe of the full image
+            // (myStripeBegin + x) is the correct 'x' value for computing the fractal
+            for (int x = 0; x < stripe; x++)
+            {
+                for (int y = 0; y < fobj.ImgHeight; y++)
+                {
+                    double a = (double)((myStripeBegin + x) - fobj.ImgWidth / 2) / (double)(fobj.ImgWidth / 4);
+                    double b = (double)(y - fobj.ImgHeight / 2) / (double)(fobj.ImgHeight / 4);
+                    ComplexClnt c = new ComplexClnt(a, b);
+                    ComplexClnt z = new ComplexClnt(0, 0);
+                    int it = 0;
+
+                    do
+                    {
+                        it++;
+                        z.Square();
+                        z.Add(c);
+
+                        if (z.Magnitude() > 2.0)
+                        {
+                            break;
+                        }
+                    } while (it <= fobj.IterationsCount);
+                    bm.SetPixel(x, y, it < fobj.IterationsCount ? Color.Red : Color.Blue);
+                }
+            }
+
+
+
+            /*
+            if (fobj.Id == 1)
             {
                 for (int x = 0; x < fobj.imgWidth/2; x++)
                 {
@@ -72,10 +90,6 @@ namespace Client
                         ComplexClnt c = new ComplexClnt(a, b);
                         ComplexClnt z = new ComplexClnt(0, 0);
                         int it = 0;
-                        //double[] coordinates =
-                        //{
-                        //    a, b
-                        //};
 
                         do
                         {
@@ -87,16 +101,12 @@ namespace Client
                             {
                                 break;
                             }
-
-                            //coordinates[0] = a;
-                            //coordinates[1] = b;
                         } while (it <= fobj.IterationsCount);
-                        //Console.WriteLine($"{x}:{y}:{it}");
                         bm.SetPixel(x, y, it < fobj.IterationsCount ? Color.Red : Color.Blue);
                     }
                 }
             }
-            else if (fobj.ID == 2)
+            else if (fobj.Id == 2)
             {
                 for (double x = fobj.imgWidth/2; x < fobj.imgWidth; x++)
                 {
@@ -107,10 +117,6 @@ namespace Client
                         ComplexClnt c = new ComplexClnt(a, b);
                         ComplexClnt z = new ComplexClnt(0, 0);
                         int it = 0;
-                        //double[] coordinates =
-                        //{
-                        //    a, b
-                        //};
 
                         do
                         {
@@ -122,15 +128,13 @@ namespace Client
                             {
                                 break;
                             }
-
-                            //coordinates[0] = a;
-                            //coordinates[1] = b;
+                            
                         } while (it <= fobj.IterationsCount);
-                        //Console.WriteLine($"{x}:{y}:{it}");
                         bm.SetPixel(Convert.ToInt32(x), y, it < fobj.IterationsCount ? Color.Red : Color.Blue);
                     }
                 }
             }
+            */
         }
     }
 }

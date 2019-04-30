@@ -12,7 +12,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using SerializedFraktal;
+using FractalLibrary;
 using Color = System.Drawing.Color;
 using Point = System.Windows.Point;
 
@@ -21,18 +21,19 @@ namespace Server
     /// <summary>
     ///     Interaktionslogik für MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow
     {
         private readonly List<Bitmap> bitmapList = new List<Bitmap>();
+        private Dictionary<int, Bitmap> bitmapDict = new Dictionary<int, Bitmap>();
         private readonly List<TcpClient> listConnectedClients = new List<TcpClient>();
         private TcpListener listener;
         private Point origin;
-
         private Point start;
+        private Bitmap newImage = new Bitmap(400, 400);
+        private int offset;
         //TransformGroup group = new TransformGroup();
         //ScaleTransform st = new ScaleTransform();
         //TranslateTransform tt = new TranslateTransform();
-
 
         public MainWindow()
         {
@@ -126,11 +127,45 @@ namespace Server
         }
         */
 
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            listener = new TcpListener(IPAddress.Loopback, 2222);
+            listener.Start();
+            /*
+            int countAvailablePcS = 0;
+            string[] availablePcS = new string[100];
+            bool isOn;
+            TcpClient expeditionClient = new TcpClient();
+
+            for (int i = 5460; i <= 5560; i++)
+            {
+                expeditionClient.Connect(IPAddress.Loopback,i);
+                isOn = expeditionClient.Client.Connected;
+                if (isOn == true)
+                {
+                    countAvailablePcS++;
+                    labelComputerAvailable.Content = countAvailablePcS;
+                    expeditionClient.Close();
+                }
+            }*/
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            var iterationsCount = Convert.ToInt32(tbIterations.Text);
+            var myFraktal = new PropsOfFractal(iterationsCount)
+            {
+                ImgWidth = imageFraktal.Width,
+                ImgHeight = imageFraktal.Height
+            };
+
+            Task.Run(() => Senden(myFraktal));
+        }
+
         private void Senden(PropsOfFractal myFraktal)
         {
-            //Hier werden nun die Informationen gesendet
-            //TcpClient mySender = new TcpClient();
-            //mySender.Connect(IPAddress.Loopback, 5566);
+            int Id = 0;
+            bitmapDict = new Dictionary<int, Bitmap>();
 
             while (true)
             {
@@ -138,58 +173,67 @@ namespace Server
                 listConnectedClients.Add(mySender);
                 Dispatcher.Invoke(() => labelComputerAvailable.Content = listConnectedClients.Count);
 
-                myFraktal.ID += 1;
+                Task.Factory.StartNew((object state) =>
+                {
+                    //if (bitmapDict.Count.ToString() !=
+                    //    Dispatcher.Invoke(() => CmbClientQuantity.Text))
+                    //{
+                    int internalID = (int)state;
+                    var fIdClone = myFraktal.Clone() as PropsOfFractal;
+                    fIdClone.Id = internalID;
+                    fIdClone.ClientCount = int.Parse(Dispatcher.Invoke(() => CmbClientQuantity.Text));
+                    //}
+                    //var selectedItem = int.Parse(Dispatcher.Invoke(() => CmbClientQuantity.Text));
 
-                var netStream = mySender.GetStream();
-                var serializer = new DataContractSerializer(typeof(PropsOfFractal));
-                serializer.WriteObject(netStream, myFraktal);
+                    var netStream = mySender.GetStream();
+                    var serializer = new DataContractSerializer(typeof(PropsOfFractal));
+                    serializer.WriteObject(netStream, fIdClone);
 
-                mySender.Client.Shutdown(SocketShutdown.Send);
+                    mySender.Client.Shutdown(SocketShutdown.Send);
 
-                var bitmSerializer = new DataContractSerializer(typeof(Bitmap));
-                var verarbeiteteDaten = (Bitmap)bitmSerializer.ReadObject(netStream);
+                    var bitmSerializer = new DataContractSerializer(typeof(Bitmap));
+                    var verarbeiteteDaten = (Bitmap)bitmSerializer.ReadObject(netStream);
 
-                netStream.Close();
-                mySender.Close();
+                    netStream.Close();
+                    mySender.Close();
 
-                bitmapList.Add(verarbeiteteDaten);
+                    //bitmapList.Add(verarbeiteteDaten);
+                    bitmapDict.Add(internalID, verarbeiteteDaten);
 
-                if (bitmapList.Count == 2)
-                    FraktalAnzeigen(bitmapList, myFraktal);
+                    //if ((internalID + 1).ToString() == myFraktal.clientCount.ToString())
+                    verarbeiteteDaten.Save($"bitmap{internalID}.jpg");
+                    ////FraktalAnzeigenOld(bitmapDict);
+                    FraktalAnzeigen(internalID, verarbeiteteDaten);
+                }, Id++);
             }
-
-
-            /*
-            Task empfangen = new Task(() =>
-            {
-                //var serializer = new DataContractSerializer(typeof(FraktalSrv));
-
-                //NetworkStream netStream = new NetworkStream(new Socket(SocketType.Stream, ProtocolType.Tcp));
-            });
-            empfangen.Start();
-            */
-
-            //Ich rufe als Abschluss nun also die Empfangsmethode auf.
         }
 
-        private void FraktalAnzeigen(List<Bitmap> bitmapList, PropsOfFractal myFraktal)
-        {
-            //foreach (var item in bitmapList)
-            //{
-            var width = Convert.ToInt32(myFraktal.imgWidth);
-            var height = Convert.ToInt32(myFraktal.imgHeight);
-            var newImage = new Bitmap(width, height);
+        //public Task SendTask(PropsOfFractal myFraktal, TcpClient mySender)
+        //{
 
-            for (var x = 0; x < width / 2; x++)
-                for (var y = 0; y < height; y++)
-                    newImage.SetPixel(x, y, bitmapList[0].GetPixel(x, y));
-            for (var x = width / 2; x < width; x++)
-                for (var y = 0; y < height; y++)
-                    newImage.SetPixel(x, y, bitmapList[1].GetPixel(x, y));
+
+        //    return Task.CompletedTask;
+        //}
+
+        private void FraktalAnzeigen(int internalId, Bitmap bitm)
+        {
+            using (var g = Graphics.FromImage(newImage))
+            {
+                g.DrawImage(bitm, new Rectangle(bitm.Width * internalId, 0, bitm.Width, bitm.Height));
+            }
+
+            imageFraktal.Dispatcher.Invoke(() => imageFraktal.Source = BitmapToImageSource(newImage));
+
+
+            //for (var x = 0; x < width / 2; x++)
+            //    for (var y = 0; y < height; y++)
+            //        newImage.SetPixel(x, y, bitmList[0].GetPixel(x, y));
+            //for (var x = width / 2; x < width; x++)
+            //    for (var y = 0; y < height; y++)
+            //        newImage.SetPixel(x, y, bitmList[1].GetPixel(x, y));
             //}
 
             //BitmapImage bmi = BitmapToImageSource(verabeiteteDaten);
-            imageFraktal.Dispatcher.Invoke(() => imageFraktal.Source = BitmapToImageSource(newImage));
         }
 
         /*private void Button_Loaded(object sender, RoutedEventArgs e)
@@ -201,40 +245,7 @@ namespace Server
             });
         }*/
 
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            //Task t = CalculateTask();
-            //ZeichneFraktal();
 
-
-            var iterationsCount = Convert.ToInt32(tbIterations.Text);
-            var myFraktal = new PropsOfFractal(iterationsCount)
-            {
-                imgWidth = imageFraktal.Width,
-                imgHeight = imageFraktal.Height
-            };
-            //FraktalSrv myFraktal = new FraktalSrv(iterationsCount);
-
-            /*double[] xCoordinates = new double[5];
-            for (int i = 0; i < 5; i++)
-            {
-                xCoordinates[i] = -2.0 + i;
-            }
-            myFraktal.KoordinatenX = xCoordinates; //X Koordinaten gesetzt!
-            double[] ycoordinates = new double[2];
-            double imaginaryNumber = Math.Sqrt(-1);
-            ycoordinates[0] = Math.Sqrt(-imaginaryNumber);
-            ycoordinates[1] = Math.Sqrt(imaginaryNumber);
-            myFraktal.KoordinatenY = ycoordinates; //Y Koordinaten gesetzt!
-            */
-
-            var senden = new Task(() =>
-            {
-                Senden(myFraktal);
-                //ZeichneFraktal();
-            });
-            senden.Start();
-        }
 
         /*private async Task CalculateTask()
         {
@@ -263,30 +274,7 @@ namespace Server
             }
         }*/
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            //Dieser Code wird erst verwendet wenn wir erste Testclients haben!
 
-            listener = new TcpListener(IPAddress.Loopback, 2222);
-            listener.Start();
-            /*
-            int countAvailablePcS = 0;
-            string[] availablePcS = new string[100];
-            bool isOn;
-            TcpClient expeditionClient = new TcpClient();
-
-            for (int i = 5460; i <= 5560; i++)
-            {
-                expeditionClient.Connect(IPAddress.Loopback,i);
-                isOn = expeditionClient.Client.Connected;
-                if (isOn == true)
-                {
-                    countAvailablePcS++;
-                    labelComputerAvailable.Content = countAvailablePcS;
-                    expeditionClient.Close();
-                }
-            }*/
-        }
 
         private BitmapImage BitmapToImageSource(Bitmap bitmap)
         {
