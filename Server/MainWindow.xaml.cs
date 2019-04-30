@@ -193,14 +193,14 @@ namespace Server
                 }
                 catch (Exception e)
                 {
-                    MessageBox.Show("Der BackupServer ist nicht mehr erreichbar!" + e);
+                    MessageBox.Show("Der BackupServer ist nicht mehr erreichbar!");
                     client.Close();
                     return false;
                 }
             }
             catch (Exception e)
             {
-                MessageBox.Show("Kein BackupServer zur Verfügung!" + e);
+                MessageBox.Show("Kein BackupServer zur Verfügung!");
                 client.Close();
                 return false;
             }
