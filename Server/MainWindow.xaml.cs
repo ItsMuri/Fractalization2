@@ -73,25 +73,6 @@ namespace Server
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            listener = new TcpListener(IPAddress.Loopback, 2222);
-            listener.Start();
-            /*
-            int countAvailablePcS = 0;
-            string[] availablePcS = new string[100];
-            bool isOn;
-            TcpClient expeditionClient = new TcpClient();
-
-            for (int i = 5460; i <= 5560; i++)
-            {
-                expeditionClient.Connect(IPAddress.Loopback,i);
-                isOn = expeditionClient.Client.Connected;
-                if (isOn == true)
-                {
-                    countAvailablePcS++;
-                    labelComputerAvailable.Content = countAvailablePcS;
-                    expeditionClient.Close();
-                }
-            }*/
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -146,27 +127,29 @@ namespace Server
                     //}
                     //var selectedItem = int.Parse(Dispatcher.Invoke(() => CmbClientQuantity.Text));
 
-                    var netStream = mySender.GetStream();
-                    CryptoStream encryptStream = new CryptoStream(netStream, cryptic.CreateEncryptor(), CryptoStreamMode.Write);
-                    var serializer = new DataContractSerializer(typeof(PropsOfFractal));
-                    serializer.WriteObject(encryptStream, fIdClone);
 
-                    encryptStream.FlushFinalBlock();
+                    using (var netStream = mySender.GetStream())
+                    {
+                        CryptoStream encryptStream = new CryptoStream(netStream, cryptic.CreateEncryptor(), CryptoStreamMode.Write);
+                        var serializer = new DataContractSerializer(typeof(PropsOfFractal));
+                        serializer.WriteObject(encryptStream, fIdClone);
 
-                    mySender.Client.Shutdown(SocketShutdown.Send);
+                        encryptStream.FlushFinalBlock();
 
-                    CryptoStream decryptStream = new CryptoStream(netStream, cryptic.CreateDecryptor(), CryptoStreamMode.Read);
-                    var bitmSerializer = new DataContractSerializer(typeof(Bitmap));
-                    var verarbeiteteDaten = (Bitmap)bitmSerializer.ReadObject(decryptStream);
+                        mySender.Client.Shutdown(SocketShutdown.Send);
 
-                    decryptStream.Close();
-                    netStream.Close();
+                        CryptoStream decryptStream = new CryptoStream(netStream, cryptic.CreateDecryptor(), CryptoStreamMode.Read);
+                        var bitmSerializer = new DataContractSerializer(typeof(Bitmap));
+                        var verarbeiteteDaten = (Bitmap)bitmSerializer.ReadObject(decryptStream);
+
+                        decryptStream.Close();
+
+                        verarbeiteteDaten.Save($"bitmap{internalID}.jpg");
+
+                        FraktalAnzeigen(internalID, verarbeiteteDaten);
+                    }
+
                     mySender.Close();
-                    
-                    verarbeiteteDaten.Save($"bitmap{internalID}.jpg");
-
-                    FraktalAnzeigen(internalID, verarbeiteteDaten);
-                    
                 }, Id++);
 
                 if (counter == Convert.ToInt32(Dispatcher.Invoke(() => CmbClientQuantity.Text)))
