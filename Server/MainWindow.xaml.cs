@@ -7,6 +7,9 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.Serialization;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -38,7 +41,6 @@ namespace Server
             StrokeThickness = 1,
             Visibility = Visibility.Collapsed
         };
-        private bool mouseDown = false;
         private Point mouseDownPos;
         //TransformGroup group = new TransformGroup();
         //ScaleTransform st = new ScaleTransform();
@@ -48,93 +50,26 @@ namespace Server
         {
             InitializeComponent();
 
+            var ipfromFile = File.ReadAllLines(@"config.cfg");
+            IPAddress.TryParse(ipfromFile[0], out IPAddress ipServer);
+            IPAddress.TryParse(ipfromFile[1], out IPAddress ipBackup);
+
+            var localep = new IPEndPoint(ipServer, 3333);
+            listener = new TcpListener(localep);
+            listener.Start();
+
+            Task T = new Task(() =>
+            {
+                Connection();
+            });
+            T.Start();
+
             BorderImage.ClipToBounds = true;
 
             //group.Children.Add(st);
             //group.Children.Add(tt);
             //imageFraktal.RenderTransform = group;
         }
-
-        private void ZeichneFraktal()
-        {
-            // Bitmap zum Zeichnen des Fraktals verwenden!
-            //Referenz auf Video YT in liked Liste!
-
-
-            var cntInterations = Convert.ToInt32(Dispatcher.Invoke(() => tbIterations.Text));
-            var ft = new FraktalTask();
-            // in ft werden die verschiedenen Koordinaten 
-
-
-            //Versuche das Fraktal in 2 Sektoren zu unterteilen!!!
-            var bm = new Bitmap(Convert.ToInt32(imageFraktal.Width), Convert.ToInt32(imageFraktal.Height));
-            var lowerBm = new Bitmap(Convert.ToInt32(imageFraktal.Width / 2),
-                Convert.ToInt32(imageFraktal.Height / 2));
-            //Haben jetzt zwei Bereiche, lowerBm ist der untere Bereich der Bitmap
-            //also in diesem Fall 200 x 200 bei einem Original von 400 x 400
-            //Idee: Färbe zuerst die 400 x 400 Fläche und danach die 200 x 200 Fläche
-
-
-            for (var x = 0; x < imageFraktal.Width / 2; x++)
-                for (var y = 0; y < imageFraktal.Height; y++)
-                {
-                    var a = (x - imageFraktal.Width / 2) / (imageFraktal.Width / 4);
-                    var b = (y - imageFraktal.Height / 2) / (imageFraktal.Height / 4);
-                    var c = new Complex(a, b);
-                    var z = new Complex(0, 0);
-                    var it = 0;
-                    do
-                    {
-                        it++;
-                        z.Square();
-                        z.Add(c);
-                        if (z.Magnitude() > 2.0)
-                            break;
-                    } while (it < cntInterations);
-
-
-                    //bm.SetPixel(x, y, it < 50 ? Color.Black : Color.Blue);
-                    bm.SetPixel(x, y, it < cntInterations ? Color.Aquamarine : Color.Red);
-                    //lowerBm.SetPixel(x,y, it < cntInterations ? Color.Yellow : Color.Blue);
-                    //Mehrere Farben so anzeigen lassen, funktioniert so nicht!!!
-                }
-
-
-            imageFraktal.Source = BitmapToImageSource(bm);
-
-            for (var x = imageFraktal.Width / 2; x < imageFraktal.Width; x++)
-                for (var y = 0; y < imageFraktal.Height; y++)
-                {
-                    var a = (x - imageFraktal.Width / 2) / (imageFraktal.Width / 4);
-                    var b = (y - imageFraktal.Height / 2) / (imageFraktal.Height / 4);
-                    var c = new Complex(a, b);
-                    var z = new Complex(0, 0);
-                    var it = 0;
-                    do
-                    {
-                        it++;
-                        z.Square();
-                        z.Add(c);
-                        if (z.Magnitude() > 2.0)
-                            break;
-                    } while (it < cntInterations);
-
-                    //bm.SetPixel(x, y, it < 50 ? Color.Black : Color.Blue);
-                    bm.SetPixel(Convert.ToInt32(x), y, it < cntInterations ? Color.Aquamarine : Color.Red);
-                    //lowerBm.SetPixel(x,y, it < cntInterations ? Color.Yellow : Color.Blue);
-                    //Mehrere Farben so anzeigen lassen, funktioniert so nicht!!!
-                }
-
-            imageFraktal.Source = BitmapToImageSource(bm);
-        }
-
-        /*
-        private Task Empfangen()
-        {
-            //Hier wird dann später empfangen
-            
-        }
-        */
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -186,9 +121,24 @@ namespace Server
 
                 Task.Factory.StartNew((object state) =>
                 {
-                    //if (bitmapDict.Count.ToString() !=
-                    //    Dispatcher.Invoke(() => CmbClientQuantity.Text))
-                    //{
+                    AesCryptoServiceProvider cryptic = new AesCryptoServiceProvider();
+                    string key = "Tg6VU5ZzKjNrR0UoYrVVgPdZafNtLT4XSwyWQRvna1w=";
+                    string IV = "NjjwRHuRPEgLAT0qD+0UaQ==";
+
+                    byte[] keybyte = Convert.FromBase64String(key);
+                    byte[] ivbyte = Convert.FromBase64String(IV);
+
+
+                    cryptic.Key = keybyte;
+                    cryptic.IV = ivbyte;
+
+                    //cryptic.GenerateKey();
+                    //cryptic.GenerateIV();
+
+                    //string k = Convert.ToBase64String(cryptic.Key);
+                    //string iv = Convert.ToBase64String(cryptic.IV);
+
+
                     int internalID = (int)state;
                     var fIdClone = myFraktal.Clone() as PropsOfFractal;
                     fIdClone.Id = internalID;
@@ -197,23 +147,24 @@ namespace Server
                     //var selectedItem = int.Parse(Dispatcher.Invoke(() => CmbClientQuantity.Text));
 
                     var netStream = mySender.GetStream();
+                    CryptoStream encryptStream = new CryptoStream(netStream, cryptic.CreateEncryptor(), CryptoStreamMode.Write);
                     var serializer = new DataContractSerializer(typeof(PropsOfFractal));
-                    serializer.WriteObject(netStream, fIdClone);
+                    serializer.WriteObject(encryptStream, fIdClone);
+
+                    encryptStream.FlushFinalBlock();
 
                     mySender.Client.Shutdown(SocketShutdown.Send);
 
+                    CryptoStream decryptStream = new CryptoStream(netStream, cryptic.CreateDecryptor(), CryptoStreamMode.Read);
                     var bitmSerializer = new DataContractSerializer(typeof(Bitmap));
-                    var verarbeiteteDaten = (Bitmap)bitmSerializer.ReadObject(netStream);
+                    var verarbeiteteDaten = (Bitmap)bitmSerializer.ReadObject(decryptStream);
 
+                    decryptStream.Close();
                     netStream.Close();
                     mySender.Close();
-
-                    //bitmapList.Add(verarbeiteteDaten);
-                    //bitmapDict.Add(internalID, verarbeiteteDaten);
-
-                    //if ((internalID + 1).ToString() == myFraktal.clientCount.ToString())
+                    
                     verarbeiteteDaten.Save($"bitmap{internalID}.jpg");
-                    ////FraktalAnzeigenOld(bitmapDict);
+
                     FraktalAnzeigen(internalID, verarbeiteteDaten);
                     
                 }, Id++);
@@ -238,57 +189,68 @@ namespace Server
             }
 
             imageFraktal.Dispatcher.Invoke(() => imageFraktal.Source = BitmapToImageSource(newImage));
-
-
-            //for (var x = 0; x < width / 2; x++)
-            //    for (var y = 0; y < height; y++)
-            //        newImage.SetPixel(x, y, bitmList[0].GetPixel(x, y));
-            //for (var x = width / 2; x < width; x++)
-            //    for (var y = 0; y < height; y++)
-            //        newImage.SetPixel(x, y, bitmList[1].GetPixel(x, y));
-            //}
-
-            //BitmapImage bmi = BitmapToImageSource(verabeiteteDaten);
         }
 
-        /*private void Button_Loaded(object sender, RoutedEventArgs e)
-        {
-            Task.Run(() =>
-            {
-                listener = new TcpListener(IPAddress.Loopback, 5566);
-                listener.Start();
-            });
-        }*/
-
-
-
-        /*private async Task CalculateTask()
+        private void Connection()
         {
             while (true)
             {
-                TcpClient tcpClient = await listener.AcceptTcpClientAsync();
+                Hello();
+            }
+        }
 
-                using (NetworkStream stream = tcpClient.GetStream())
+        private bool Hello()
+        {
+            var ipfromFile = File.ReadAllLines(@"config.cfg");
+            IPAddress.TryParse(ipfromFile[0], out IPAddress ipServer);
+            IPAddress.TryParse(ipfromFile[1], out IPAddress ipBackup);
+
+            var localep = new IPEndPoint(ipServer, 0);
+            TcpClient client = new TcpClient(localep);
+
+            var remotep = new IPEndPoint(ipBackup, 6666);
+            try
+            {
+                Thread.Sleep(10000);
+                client.Connect(remotep);
+                try
                 {
-                    while (true)
+                    using (NetworkStream stream = client.GetStream())
                     {
-                        using (var writer = new StreamWriter(stream, Encoding.ASCII, 4096, leaveOpen: true))
+                        while (true)
                         {
-                            string str = Convert.ToString("Connection established");
-                            writer.WriteLine(str);
-                        }
-
-                        using (var reader =
-                            new StreamReader(stream, Encoding.ASCII, true, 4096, leaveOpen: true))
-                        {
-                            string answer = reader.ReadLine();
-                            MessageBox.Show($"{answer}");
+                            using (var writer = new StreamWriter(stream, Encoding.ASCII, 4096, leaveOpen: true))
+                            {
+                                int itanzahl = Convert.ToInt32(Dispatcher.Invoke(() => tbIterations.Text));
+                                writer.WriteLine("Hello." + itanzahl.ToString());
+                            }
+                            using (var reader = new StreamReader(stream, Encoding.ASCII, true, 4096, leaveOpen: true))
+                            {
+                                string response = reader.ReadLine();
+                                if (response != "Got it")
+                                {
+                                    throw new Exception();
+                                }
+                            }
+                            Thread.Sleep(2000);
                         }
                     }
+
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show("Der BackupServer ist nicht mehr erreichbar!");
+                    client.Close();
+                    return false;
                 }
             }
-        }*/
-
+            catch (Exception e)
+            {
+                MessageBox.Show("Kein BackupServer zur Verfügung!");
+                client.Close();
+                return false;
+            }
+        }
 
 
         private BitmapImage BitmapToImageSource(Bitmap bitmap)
@@ -309,7 +271,6 @@ namespace Server
 
         private void ImageFraktal_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            mouseDown = true;
             mouseDownPos = e.GetPosition(imageFraktal);
 
             
@@ -321,7 +282,7 @@ namespace Server
 
         private void ImageFraktal_MouseMove(object sender, MouseEventArgs e)
         {
-            if (mouseDown)
+            if (e.LeftButton==MouseButtonState.Pressed)
             {
                 Point mousePos = e.GetPosition(imageFraktal);
                 Vector diff = mousePos - mouseDownPos;
@@ -351,7 +312,7 @@ namespace Server
             
         }
 
-        /*
+        
         private void ImageFraktal_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             var st = (ScaleTransform)((TransformGroup)imageFraktal.RenderTransform).Children.First(tr =>
@@ -360,7 +321,7 @@ namespace Server
             st.ScaleX += zoom;
             st.ScaleY += zoom;
         }
-
+        /*
         private void ImageFraktal_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             imageFraktal.CaptureMouse();
