@@ -139,17 +139,16 @@ namespace Server
                         mySender.Client.Shutdown(SocketShutdown.Send);
 
                         CryptoStream decryptStream = new CryptoStream(netStream, cryptic.CreateDecryptor(), CryptoStreamMode.Read);
-                        var bitmSerializer = new DataContractSerializer(typeof(Bitmap));
-                        var verarbeiteteDaten = (Bitmap)bitmSerializer.ReadObject(decryptStream);
-
-                        decryptStream.Close();
-
+                        var verarbeiteteDaten = (Bitmap)System.Drawing.Image.FromStream(decryptStream);
+                        
                         verarbeiteteDaten.Save($"bitmap{internalID}.jpg");
 
                         FraktalAnzeigen(internalID, verarbeiteteDaten);
-                    }
 
+                        decryptStream.Close();
+                    }
                     mySender.Close();
+
                 }, Id++);
 
                 if (counter == Convert.ToInt32(Dispatcher.Invoke(() => CmbClientQuantity.Text)))
