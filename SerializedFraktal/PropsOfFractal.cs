@@ -10,14 +10,16 @@ namespace SerializedFraktal
     [DataContract]
     public class PropsOfFractal
     {
-        [DataMember]
-        public int IterationsCount { get; set; }
         public PropsOfFractal(int iterationsCount)
         {
             IterationsCount = iterationsCount;
         }
         [DataMember]
-        public int ID { get; set; }
+        public int IterationsCount { get; set; }
+        [DataMember]
+        public int Id { get; set; }
+        [DataMember]
+        public int clientCount { get; set; }
         [DataMember]
         public Bitmap NeededBitmap { get; set; }
         [DataMember]

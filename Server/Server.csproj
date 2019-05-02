@@ -128,9 +128,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SerializedFraktal\SerializedFraktal.csproj">
-      <Project>{0578e923-f65a-47cb-b346-f927cbc66c41}</Project>
-      <Name>SerializedFraktal</Name>
+    <ProjectReference Include="..\FractalLibrary\FractalLibrary.csproj">
+      <Project>{180ed7ee-ccca-4776-9bc1-633ff3b0805f}</Project>
+      <Name>FractalLibrary</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

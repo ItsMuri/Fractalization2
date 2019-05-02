@@ -10,8 +10,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
-using SerializedFraktal;
+using FractalLibrary;
 
+//using Server;
 
 namespace Client
 {
@@ -19,145 +20,68 @@ namespace Client
     {
         static void Main(string[] args)
         {
-            //Console.WriteLine("---Client1---");
-
-            Console.WriteLine("Awaiting Connection");
-
-            Thread.Sleep(10000);
-            ServerConnenction();
-            //TryToConnectServer();
-
-
-            //Console.ReadLine();
-            //Console.ReadKey();
-        }
-        // Es wird alle 10 Sekunden versucht sich mit dem Hauptserver zu verbinden. Der Client versucht sich zu verbinden. Wenn die Verbindung erfolgreich war
-        // wird die Methode Server Connection erneut aufgerufen.
-        //public static bool TryToConnectServer()
-        //{
-        //    var localep = new IPEndPoint(IPAddress.Loopback, 0);
-        //    TcpClient client = new TcpClient(localep);
-        //    var remoteep = new IPEndPoint(IPAddress.Loopback, 3333);
-
-        //    try
-        //    {
-        //        Console.WriteLine("Versuche mit dem Haupt Server zu verbinden");
-        //        client.Connect(remoteep);
-
-        //        string ip = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
-        //        string port_client = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
-        //        Console.WriteLine($"Erneut verbunden mit Haupt Server {ip}, {port_client}");
-
-        //        client.Close();
-        //        return true;
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        return false;
-        //    }
-
-        //}
-        //Derzeitiges Problem: Hauptserver +  client: Hauptserver sagt berechne, client schickt berechnung zurück und Server zeigt an.
-        //Dann, obwohl der Hauptserver noch läuft, verbindet sich der Client mit dem Backup Server und wartet dort auf die neue Eingabe
-        //und berechnet sie dann an den Backup
-
-        public static void ServerConnenction()
-        {
-            // Forschleife anzahl versuche / min überprüfen muss noch gemacht werden
             while (true)
             {
-                bool success = ProcessRequests(3333);
-
-                if (!success)
-                {
-                    Console.WriteLine("Wechsle zu Backupserver");
-                    ProcessRequests(2222);
-
-                    //Thread.Sleep(10000);
-                    //for (int i = 0; i <= 60; i++)
-                    //{
-                    //    bool ConnectionWorks = TryToConnectServer();
-                    //    if (ConnectionWorks == true)
-                    //    {
-                    //        ProcessRequests(3333);
-                    //        Console.WriteLine("Es hat geklappt");
-                    //        break;
-                    //    }
-                    //    else
-                    //    {
-                    //        Console.WriteLine("Leider kein bs verfügbar!");
-                    //        i++;
-                    //        Thread.Sleep(2000);
-                    //    }
-                    //}
-                }
-                else
-                {
-                    Console.WriteLine("Wechsle zu Server");
-                    ProcessRequests(3333);
-                }
-                Thread.Sleep(1000);
-            }
-        }
-
-
-        private static bool ProcessRequests(int port)
-        {
-            var localep = new IPEndPoint(IPAddress.Loopback, 0);
-
-            //while (true)
-            //{
-            TcpClient client = new TcpClient(localep);
-
-            var remotep = new IPEndPoint(IPAddress.Loopback, port);
-            try
-            {
-                client.Connect(remotep);
-                string ip = ((IPEndPoint) client.Client.RemoteEndPoint).Address.ToString();
-                string port_client = ((IPEndPoint) client.Client.RemoteEndPoint).Port.ToString();
-                if (port == 3333)
-                {
-                    Console.WriteLine($"Verbunden mit Server {ip}, {port_client}");
-                }
-                else if (port == 2222)
-                {
-                    Console.WriteLine($"Verbunden mit Backup Server {ip}, {port_client}");
-                }
-                else
-                {
-                    Console.WriteLine($"Verbunden mit Unbekanntem Server {ip}, {port_client}");
-                }
+                Console.ReadKey();
+                TcpClient client = new TcpClient(new IPEndPoint(IPAddress.Any, 0));
+                client.Connect(IPAddress.Loopback, 2222);
+                Console.WriteLine("Connected");
 
                 using (NetworkStream stream = client.GetStream())
                 {
-                    Console.WriteLine("Iterating ...");
                     var serializer = new DataContractSerializer(typeof(PropsOfFractal));
-                    PropsOfFractal fobj = (PropsOfFractal) serializer.ReadObject(stream);
+                    PropsOfFractal fobj = (PropsOfFractal)serializer.ReadObject(stream);
 
-                    Bitmap bm = new Bitmap(400, 400);
-                    Calculate(fobj, ref bm);
+                    int stripe = (int)fobj.ImgWidth / fobj.ClientCount;
+                    Bitmap bm = new Bitmap(stripe, Convert.ToInt32(fobj.ImgHeight));
+                    Calculate(fobj, stripe, ref bm);
 
                     var ser = new DataContractSerializer(typeof(Bitmap));
                     ser.WriteObject(stream, bm);
                 }
+
                 client.Close();
-                return true;
             }
-            catch (Exception e2)
-            {
-                Console.WriteLine("Exception caught ..." + e2.Message);
-                return false;
-            }
-            //}
         }
 
-        private static void Calculate(PropsOfFractal fobj, ref Bitmap bm)
+        private static void Calculate(PropsOfFractal fobj, int stripe, ref Bitmap bm)
         {
-            Console.WriteLine("ID: " + fobj.ID);
+            Console.WriteLine("ID: " + fobj.Id);
+            int myStripeBegin = stripe * fobj.Id;
 
-            if (fobj.ID == 1)
+            // x and y are the coordinates in the bitmap image that represents a stripe of the full image
+            // (myStripeBegin + x) is the correct 'x' value for computing the fractal
+            for (int x = 0; x < stripe; x++)
             {
-                for (int x = 0; x < fobj.imgWidth / 2; x++)
+                for (int y = 0; y < fobj.ImgHeight; y++)
+                {
+                    double a = (double)((myStripeBegin + x) - fobj.ImgWidth / 2) / (double)(fobj.ImgWidth / 4);
+                    double b = (double)(y - fobj.ImgHeight / 2) / (double)(fobj.ImgHeight / 4);
+                    ComplexClnt c = new ComplexClnt(a, b);
+                    ComplexClnt z = new ComplexClnt(0, 0);
+                    int it = 0;
+
+                    do
+                    {
+                        it++;
+                        z.Square();
+                        z.Add(c);
+
+                        if (z.Magnitude() > 2.0)
+                        {
+                            break;
+                        }
+                    } while (it <= fobj.IterationsCount);
+                    bm.SetPixel(x, y, it < fobj.IterationsCount ? Color.Red : Color.Blue);
+                }
+            }
+
+
+
+            /*
+            if (fobj.Id == 1)
+            {
+                for (int x = 0; x < fobj.imgWidth/2; x++)
                 {
                     for (int y = 0; y < fobj.imgHeight; y++)
                     {
@@ -166,10 +90,6 @@ namespace Client
                         ComplexClnt c = new ComplexClnt(a, b);
                         ComplexClnt z = new ComplexClnt(0, 0);
                         int it = 0;
-                        //double[] coordinates =
-                        //{
-                        //    a, b
-                        //};
 
                         do
                         {
@@ -181,30 +101,22 @@ namespace Client
                             {
                                 break;
                             }
-
-                            //coordinates[0] = a;
-                            //coordinates[1] = b;
                         } while (it <= fobj.IterationsCount);
-                        //Console.WriteLine($"{x}:{y}:{it}");
                         bm.SetPixel(x, y, it < fobj.IterationsCount ? Color.Red : Color.Blue);
                     }
                 }
             }
-            else if (fobj.ID == 2)
+            else if (fobj.Id == 2)
             {
-                for (double x = fobj.imgWidth / 2; x < fobj.imgWidth; x++)
+                for (double x = fobj.imgWidth/2; x < fobj.imgWidth; x++)
                 {
                     for (int y = 0; y < fobj.imgHeight; y++)
                     {
-                        double a = (double) (x - fobj.imgWidth / 2) / (double) (fobj.imgWidth / 4);
-                        double b = (double) (y - fobj.imgHeight / 2) / (double) (fobj.imgHeight / 4);
+                        double a = (double)(x - fobj.imgWidth / 2) / (double)(fobj.imgWidth / 4);
+                        double b = (double)(y - fobj.imgHeight / 2) / (double)(fobj.imgHeight / 4);
                         ComplexClnt c = new ComplexClnt(a, b);
                         ComplexClnt z = new ComplexClnt(0, 0);
                         int it = 0;
-                        //double[] coordinates =
-                        //{
-                        //    a, b
-                        //};
 
                         do
                         {
@@ -216,15 +128,13 @@ namespace Client
                             {
                                 break;
                             }
-
-                            //coordinates[0] = a;
-                            //coordinates[1] = b;
+                            
                         } while (it <= fobj.IterationsCount);
-                        //Console.WriteLine($"{x}:{y}:{it}");
                         bm.SetPixel(Convert.ToInt32(x), y, it < fobj.IterationsCount ? Color.Red : Color.Blue);
                     }
                 }
             }
+            */
         }
     }
 }
