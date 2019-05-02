@@ -40,13 +40,16 @@ namespace Server
         {
             InitializeComponent();
 
-            var localep = new IPEndPoint(IPAddress.Loopback, 3333);
+            var ipfromFile = File.ReadAllLines(@"config.cfg");
+            IPAddress.TryParse(ipfromFile[0], out IPAddress ipServer);
+            IPAddress.TryParse(ipfromFile[1], out IPAddress ipBackup);
+
+            var localep = new IPEndPoint(ipServer, 3333);
             listener = new TcpListener(localep);
             listener.Start();
 
             Task T = new Task(() =>
             {
-                //Hello();
                 Connection();
             });
             T.Start();
@@ -54,71 +57,16 @@ namespace Server
             //Vielleicht kann man das mit WriteableBitmap zeichnen lassen...
 
         }
-        private void Hello()
+        private bool Hello()
         {
-            // Console.WriteLine("---Server---");
-            var localep = new IPEndPoint(IPAddress.Loopback, 0);
+            var ipfromFile = File.ReadAllLines(@"config.cfg");
+            IPAddress.TryParse(ipfromFile[0], out IPAddress ipServer);
+            IPAddress.TryParse(ipfromFile[1], out IPAddress ipBackup);
+
+            var localep = new IPEndPoint(ipServer, 0);
             TcpClient client = new TcpClient(localep);
 
-            var remotep = new IPEndPoint(IPAddress.Loopback, 6666);
-            try
-            {
-                Thread.Sleep(10000);
-                client.Connect(remotep);
-                try
-                {
-                    using (NetworkStream stream = client.GetStream())
-                    {
-
-
-                        while (true)
-                        {
-                            using (var writer = new StreamWriter(stream, Encoding.ASCII, 4096, leaveOpen: true))
-                            {
-                                int itanzahl = Convert.ToInt32(Dispatcher.Invoke(() => tbIterations.Text));
-
-                                writer.WriteLine("Hello." + itanzahl.ToString());
-                            }
-                            using (var reader = new StreamReader(stream, Encoding.ASCII, true, 4096, leaveOpen: true))
-                            {
-                                string response = reader.ReadLine();
-                                while (response != "Got it")
-                                { }
-                            }
-                            System.Threading.Thread.Sleep(2000);
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    MessageBox.Show("Der BackupServer ist nicht mehr erreichbar!" + e);
-                }
-                client.Close();
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show("Kein BackupServer zur Verfügung!" + e);
-            }
-
-        }
-
-        private void Connection()
-        {
-            while (true)
-            {
-                while(Success() == false)
-                {
-                    Success();
-                }
-            }
-        }
-
-        private bool Success()
-        {
-            var localep = new IPEndPoint(IPAddress.Loopback, 0);
-            TcpClient client = new TcpClient(localep);
-
-            var remotep = new IPEndPoint(IPAddress.Loopback, 6666);
+            var remotep = new IPEndPoint(ipBackup, 6666);
             try
             {
                 Thread.Sleep(10000);
@@ -137,8 +85,10 @@ namespace Server
                             using (var reader = new StreamReader(stream, Encoding.ASCII, true, 4096, leaveOpen: true))
                             {
                                 string response = reader.ReadLine();
-                                while (response != "Got it")
-                                { }
+                                if (response != "Got it")
+                                {
+                                    throw new Exception();
+                                }
                             }
                             Thread.Sleep(2000);
                         }
@@ -147,16 +97,24 @@ namespace Server
                 }
                 catch (Exception e)
                 {
-                    MessageBox.Show("Der BackupServer ist nicht mehr erreichbar!" + e);
+                    MessageBox.Show("Der BackupServer ist nicht mehr erreichbar!");
                     client.Close();
                     return false;
                 }
             }
             catch (Exception e)
             {
-                MessageBox.Show("Kein BackupServer zur Verfügung!" + e);
+                MessageBox.Show("Kein BackupServer zur Verfügung!");
                 client.Close();
                 return false;
+            }
+        }
+
+        private void Connection()
+        {
+            while (true)
+            {
+                Hello();
             }
         }
 
@@ -216,13 +174,6 @@ namespace Server
             
         }
 
-        /*
-        private Task Empfangen()
-        {
-            //Hier wird dann später empfangen
-            
-        }
-        */
 
         private void Senden(PropsOfFractal myFraktal)
         {
@@ -238,20 +189,9 @@ namespace Server
             netStream.Close();
             mySender.Close();
 
+
             FraktalAnzeigen(verabeiteteDaten);
             
-
-            /*
-            Task empfangen = new Task(() =>
-            {
-                //var serializer = new DataContractSerializer(typeof(FraktalSrv));
-
-                //NetworkStream netStream = new NetworkStream(new Socket(SocketType.Stream, ProtocolType.Tcp));
-            });
-            empfangen.Start();
-            */
-
-            //Ich rufe als Abschluss nun also die Empfangsmethode auf.
         }
 
         private void FraktalAnzeigen(Bitmap verabeiteteDaten)
