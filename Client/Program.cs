@@ -27,39 +27,6 @@ namespace Client
             ServerConnenction();
         }
 
-        private static void Calculate(PropsOfFractal fobj, int stripe, ref Bitmap bm)
-        {
-            Console.WriteLine("ID: " + fobj.Id);
-            int myStripeBegin = stripe * fobj.Id;
-
-            // x and y are the coordinates in the bitmap image that represents a stripe of the full image
-            // (myStripeBegin + x) is the correct 'x' value for computing the fractal
-            for (int x = 0; x < stripe; x++)
-            {
-                for (int y = 0; y < fobj.ImgHeight; y++)
-                {
-                    double a = (double)((myStripeBegin + x) - fobj.ImgWidth / 2) / (double)(fobj.ImgWidth / 4);
-                    double b = (double)(y - fobj.ImgHeight / 2) / (double)(fobj.ImgHeight / 4);
-                    ComplexClnt c = new ComplexClnt(a, b);
-                    ComplexClnt z = new ComplexClnt(0, 0);
-                    int it = 0;
-
-                    do
-                    {
-                        it++;
-                        z.Square();
-                        z.Add(c);
-
-                        if (z.Magnitude() > 2.0)
-                        {
-                            break;
-                        }
-                    } while (it <= fobj.IterationsCount);
-                    bm.SetPixel(x, y, it < fobj.IterationsCount ? Color.Red : Color.Blue);
-                }
-            }
-        }
-
         public static void ServerConnenction()
         {
             var ipfromFile = File.ReadAllLines(@"config.cfg");
@@ -98,6 +65,7 @@ namespace Client
             try
             {
                 client.Connect(remotep);
+
                 string ip = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
                 string port_client = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
 
@@ -145,7 +113,7 @@ namespace Client
 
                     decryptStream.Close();
 
-                    client.Client.Shutdown(SocketShutdown.Send);
+                    //client.Client.Shutdown(SocketShutdown.Send);
                 }
                 client.Close();
                 return true;
@@ -154,6 +122,44 @@ namespace Client
             {
                 Console.WriteLine("Exception caught ..." + e2.Message);
                 return false;
+            }
+        }
+        private static void Calculate(PropsOfFractal fobj, int stripe, ref Bitmap bm)
+        {
+            Console.WriteLine("ID: " + fobj.Id);
+            int myStripeBegin = stripe * fobj.Id;
+
+            // x and y are the coordinates in the bitmap image that represents a stripe of the full image
+            // (myStripeBegin + x) is the correct 'x' value for computing the fractal
+            for (int x = 0; x < stripe; x++)
+            {
+                for (int y = 0; y < fobj.ImgHeight; y++)
+                {
+                    double a = (double)((myStripeBegin + x) - fobj.ImgWidth / 2) / (double)(fobj.ImgWidth / 4);
+                    double b = (double)(y - fobj.ImgHeight / 2) / (double)(fobj.ImgHeight / 4);
+                    ComplexClnt c = new ComplexClnt(a, b);
+                    ComplexClnt z = new ComplexClnt(0, 0);
+                    int it = 0;
+
+                    do
+                    {
+                        it++;
+                        z.Square();
+                        z.Add(c);
+
+                        if (z.Magnitude() > 2.0)
+                        {
+                            break;
+                        }
+                    } while (it <= fobj.IterationsCount);
+                    //bm.SetPixel(x, y, it < fobj.IterationsCount ? Color.Red : Color.Blue);
+
+
+
+                    var faktor = 255 / (it * 2);
+
+                    bm.SetPixel(x, y, Color.FromArgb(0, 60 + faktor, 0 + faktor, 70 + faktor));
+                }
             }
         }
 
