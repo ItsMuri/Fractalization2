@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Server"
         mc:Ignorable="d"
-        Title="MainWindow" Height="623.95" Width="950" Loaded="Window_Loaded">
+        Title="MainWindow" Height="461.95" Width="795.5" Loaded="Window_Loaded">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="101*" />
@@ -17,20 +17,17 @@
                Grid.Column="1" />
         <TextBox x:Name="tbIterations" HorizontalAlignment="Left" Height="20" Margin="91.455,186,0,0"
                  TextWrapping="Wrap" VerticalAlignment="Top" Width="85" Grid.Column="1" Text="100" />
-        <Canvas x:Name="canvasDraw" HorizontalAlignment="Left" Height="113" Margin="10,10,0,0" VerticalAlignment="Top"
-                Width="586" Background="Blue" />
         <Button x:Name="btnCalculate" Content="Calculate" HorizontalAlignment="Left" Margin="66.455,274,0,0"
                 VerticalAlignment="Top" Width="110" Height="45" Click="Button_Click" Grid.Column="1" />
 
         <Label x:Name="labelComputerAvailable" Content="" Grid.Column="1" HorizontalAlignment="Left"
                Margin="161,10,0,0" VerticalAlignment="Top" Height="36" Width="44" />
         <Border x:Name="BorderImage" BorderThickness="0" BorderBrush="#FF000000" Width="400" Height="400"
-                Margin="10,146,311,47">
-            <Image x:Name="imageFraktal" HorizontalAlignment="Left"
-                   VerticalAlignment="Top" Width="400" Height="400" RenderTransformOrigin="0.5,0.5"
+                Margin="21,14,169,179">
+            <Image x:Name="imageFraktal" RenderTransformOrigin="0.5,0.5"
                    MouseWheel="ImageFraktal_MouseWheel" MouseLeftButtonDown="ImageFraktal_MouseLeftButtonDown"
                    MouseMove="ImageFraktal_MouseMove" MouseLeftButtonUp="ImageFraktal_MouseLeftButtonUp"
-                   Margin="-1">
+                   Margin="-1,-1,0,0" HorizontalAlignment="Left" Width="400" Height="400">
                 <Image.RenderTransform>
                     <TransformGroup>
                         <ScaleTransform />
@@ -39,8 +36,6 @@
                 </Image.RenderTransform>
             </Image>
         </Border>
-        <Slider x:Name="SliderZoom" HorizontalAlignment="Left" Margin="61.455,368,0,0" VerticalAlignment="Top"
-                Width="115" Grid.Column="1" Value="0.5" Minimum="0.5" Maximum="5.0" LargeChange="0.5" SmallChange="0.1" />
 
         <Label Content="Amount of Clients:" Grid.Column="1" HorizontalAlignment="Left" Margin="30,97,0,0"
                VerticalAlignment="Top" />

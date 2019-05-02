@@ -31,6 +31,15 @@ namespace Server
         private Point start;
         private Bitmap newImage = new Bitmap(400, 400);
         private int offset;
+
+        private System.Windows.Shapes.Rectangle selection = new System.Windows.Shapes.Rectangle()
+        {
+            Stroke = System.Windows.Media.Brushes.Black,
+            StrokeThickness = 1,
+            Visibility = Visibility.Collapsed
+        };
+        private bool mouseDown = false;
+        private Point mouseDownPos;
         //TransformGroup group = new TransformGroup();
         //ScaleTransform st = new ScaleTransform();
         //TranslateTransform tt = new TranslateTransform();
@@ -298,6 +307,51 @@ namespace Server
             }
         }
 
+        private void ImageFraktal_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            mouseDown = true;
+            mouseDownPos = e.GetPosition(imageFraktal);
+
+            
+
+            selection.Width = 0;
+            selection.Height = 0;
+            selection.Visibility = Visibility.Visible;
+        }
+
+        private void ImageFraktal_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (mouseDown)
+            {
+                Point mousePos = e.GetPosition(imageFraktal);
+                Vector diff = mousePos - mouseDownPos;
+
+                Point topLeft = mouseDownPos;
+
+                if (diff.X < 0)
+                {
+                    topLeft.X = mousePos.X;
+                    diff.X = -diff.X;
+                }
+                if (diff.Y < 0)
+                {
+                    topLeft.Y = mousePos.X;
+                    diff.Y = -diff.Y;
+                }
+
+                selection.Width = diff.X;
+                selection.Height = diff.Y;
+
+
+            }
+        }
+
+        private void ImageFraktal_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            
+        }
+
+        /*
         private void ImageFraktal_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             var st = (ScaleTransform)((TransformGroup)imageFraktal.RenderTransform).Children.First(tr =>
@@ -334,5 +388,6 @@ namespace Server
         {
             imageFraktal.ReleaseMouseCapture();
         }
-    }
+        */
+        }
 }
