@@ -29,11 +29,10 @@ namespace Client
 
         public static void ServerConnenction()
         {
-            //var ipfromFile = File.ReadAllLines(@"config.cfg");
-            Console.Write("Server IP:");
-            IPAddress.TryParse(Console.ReadLine(), out IPAddress ipServer);
-            Console.Write("Backup IP:");
-            IPAddress.TryParse(Console.ReadLine(), out IPAddress ipBackup);
+            var ipfromFile = File.ReadAllLines(@"config.cfg");
+
+            IPAddress.TryParse(ipfromFile[0], out IPAddress ipServer);
+            IPAddress.TryParse(ipfromFile[1], out IPAddress ipBackup);
 
             while (true)
             {

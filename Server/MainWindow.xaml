@@ -51,12 +51,5 @@
             <ComboBoxItem Content="2" />
             <ComboBoxItem Content="4" />
         </ComboBox>
-
-        <Label Content="Server IP:" HorizontalAlignment="Left" Margin="18,416,0,0" VerticalAlignment="Top" Height="26" Width="62" />
-        <TextBox x:Name="tbServerIP" HorizontalAlignment="Left" Height="20" Margin="79,422,0,0"
-                 TextWrapping="Wrap" VerticalAlignment="Top" Width="85" Text="127.0.0.1" />
-        <Label Content="Backup IP:" HorizontalAlignment="Left" Margin="222,416,0,0" VerticalAlignment="Top" Height="26" Width="65" />
-        <TextBox x:Name="tbBackupIP" HorizontalAlignment="Left" Height="20" Margin="287,421,0,0"
-                 TextWrapping="Wrap" VerticalAlignment="Top" Width="85" Text="" />
     </Grid>
 </Window>
