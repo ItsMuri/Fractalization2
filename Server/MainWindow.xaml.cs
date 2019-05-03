@@ -38,8 +38,7 @@ namespace Server
             StrokeThickness = 1,
             Visibility = Visibility.Collapsed
         };
-        private bool mouseDown = false;
-        private Point mouseDownPos;
+        private Point startPos;
         //TransformGroup group = new TransformGroup();
         //ScaleTransform st = new ScaleTransform();
         //TranslateTransform tt = new TranslateTransform();
@@ -215,7 +214,7 @@ namespace Server
                     verarbeiteteDaten.Save($"bitmap{internalID}.jpg");
                     ////FraktalAnzeigenOld(bitmapDict);
                     FraktalAnzeigen(internalID, verarbeiteteDaten);
-                    
+
                 }, Id++);
 
                 if (counter == Convert.ToInt32(Dispatcher.Invoke(() => CmbClientQuantity.Text)))
@@ -260,8 +259,6 @@ namespace Server
             });
         }*/
 
-
-
         /*private async Task CalculateTask()
         {
             while (true)
@@ -290,7 +287,6 @@ namespace Server
         }*/
 
 
-
         private BitmapImage BitmapToImageSource(Bitmap bitmap)
         {
             using (var memory = new MemoryStream())
@@ -309,10 +305,7 @@ namespace Server
 
         private void ImageFraktal_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            mouseDown = true;
-            mouseDownPos = e.GetPosition(imageFraktal);
-
-            
+            startPos = e.GetPosition(imageFraktal);
 
             selection.Width = 0;
             selection.Height = 0;
@@ -321,37 +314,47 @@ namespace Server
 
         private void ImageFraktal_MouseMove(object sender, MouseEventArgs e)
         {
-            if (mouseDown)
+            if (e.LeftButton == MouseButtonState.Pressed)
             {
-                Point mousePos = e.GetPosition(imageFraktal);
-                Vector diff = mousePos - mouseDownPos;
+                Point currentPos = e.GetPosition(imageFraktal);
+                Vector diff = currentPos - startPos;
 
-                Point topLeft = mouseDownPos;
+                //Point topLeft = startPos;
 
-                if (diff.X < 0)
+                //if (diff.X < 0)
+                //{
+                //    topLeft.X = currentPos.X;
+                //    diff.X = -diff.X;
+                //}
+                //if (diff.Y < 0)
+                //{
+                //    topLeft.Y = currentPos.X;
+                //    diff.Y = -diff.Y;
+                //}
+                try
                 {
-                    topLeft.X = mousePos.X;
-                    diff.X = -diff.X;
+                    selection.Width = diff.X;
+                    selection.Height = diff.Y;
                 }
-                if (diff.Y < 0)
-                {
-                    topLeft.Y = mousePos.X;
-                    diff.Y = -diff.Y;
-                }
-
-                selection.Width = diff.X;
-                selection.Height = diff.Y;
-
-
+                catch (Exception ex)
+                { }
             }
         }
 
         private void ImageFraktal_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            
+            selection.Visibility = Visibility.Collapsed;
+
+            var iterationsCount = Convert.ToInt32(tbIterations.Text);
+            var myFraktal = new PropsOfFractal(iterationsCount)
+            {
+                ImgWidth = selection.Width,
+                ImgHeight = selection.Height
+            };
+            Task.Run(() => Senden(myFraktal));
         }
 
-        /*
+
         private void ImageFraktal_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             var st = (ScaleTransform)((TransformGroup)imageFraktal.RenderTransform).Children.First(tr =>
@@ -360,7 +363,7 @@ namespace Server
             st.ScaleX += zoom;
             st.ScaleY += zoom;
         }
-
+        /*
         private void ImageFraktal_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             imageFraktal.CaptureMouse();
@@ -389,5 +392,5 @@ namespace Server
             imageFraktal.ReleaseMouseCapture();
         }
         */
-        }
+    }
 }
