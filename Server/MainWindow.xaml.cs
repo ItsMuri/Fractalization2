@@ -50,9 +50,9 @@ namespace Server
         {
             InitializeComponent();
 
-            var ipfromFile = File.ReadAllLines(@"config.cfg");
-            IPAddress.TryParse(ipfromFile[0], out IPAddress ipServer);
-            IPAddress.TryParse(ipfromFile[1], out IPAddress ipBackup);
+            //var ipfromFile = File.ReadAllLines(@"config.cfg");
+            IPAddress.TryParse(tbServerIP.Text, out IPAddress ipServer);
+            IPAddress.TryParse(tbBackupIP.Text, out IPAddress ipBackup);
 
             var localep = new IPEndPoint(ipServer, 3333);
             listener = new TcpListener(localep);
@@ -183,9 +183,9 @@ namespace Server
 
         private bool Hello()
         {
-            var ipfromFile = File.ReadAllLines(@"config.cfg");
-            IPAddress.TryParse(ipfromFile[0], out IPAddress ipServer);
-            IPAddress.TryParse(ipfromFile[1], out IPAddress ipBackup);
+            //var ipfromFile = File.ReadAllLines(@"config.cfg");
+            IPAddress.TryParse(tbServerIP.Text, out IPAddress ipServer);
+            IPAddress.TryParse(tbBackupIP.Text, out IPAddress ipBackup);
 
             var localep = new IPEndPoint(ipServer, 0);
             TcpClient client = new TcpClient(localep);
