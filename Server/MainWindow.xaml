@@ -14,15 +14,14 @@
         <Label Content="Iterations:" HorizontalAlignment="Left" Margin="17,447,0,0" VerticalAlignment="Top" Height="26" Width="62" />
         <TextBox x:Name="tbIterations" HorizontalAlignment="Left" Height="20" Margin="79,451,0,0"
                  TextWrapping="Wrap" VerticalAlignment="Top" Width="85" Text="100" />
-        <Button x:Name="btnCalculate" Content="Calculate" HorizontalAlignment="Left" Margin="18,476,0,0"
+        <Button x:Name="btnCalculate" Content="Calculate" HorizontalAlignment="Left" Margin="18,498,0,0"
                 VerticalAlignment="Top" Width="385" Height="45" Click="Button_Click" />
 
         <Label x:Name="labelComputerAvailable" Content="" Grid.Column="1" HorizontalAlignment="Left"
                Margin="161,10,-193,0" VerticalAlignment="Top" Height="36" Width="44" />
         <Border x:Name="BorderImage" BorderThickness="0" BorderBrush="#FF000000"
                 Margin="10,10,0,143">
-            <Image x:Name="imageFraktal" HorizontalAlignment="Left"
-                   VerticalAlignment="Top" Width="400" Height="400" RenderTransformOrigin="0.5,0.5"
+            <Image x:Name="imageFraktal" HorizontalAlignment="Left" Width="400" RenderTransformOrigin="0.5,0.5"
                    MouseWheel="ImageFraktal_MouseWheel" MouseLeftButtonDown="ImageFraktal_MouseLeftButtonDown"
                    MouseMove="ImageFraktal_MouseMove" MouseLeftButtonUp="ImageFraktal_MouseLeftButtonUp">
                 <Image.RenderTransform>
@@ -51,5 +50,11 @@
             <ComboBoxItem Content="2" />
             <ComboBoxItem Content="4" />
         </ComboBox>
+        <Label Content="Server IP:" HorizontalAlignment="Left" Margin="18,416,0,0" VerticalAlignment="Top" Height="26" Width="62" />
+        <TextBox x:Name="tbServerIP" HorizontalAlignment="Left" Height="20" Margin="79,422,0,0"
+                 TextWrapping="Wrap" VerticalAlignment="Top" Width="85" Text="" TextChanged="TbServerIP_TextChanged" KeyDown="TbServerIP_OnKeyDown"/>
+        <Label Content="Backup IP:" HorizontalAlignment="Left" Margin="222,416,0,0" VerticalAlignment="Top" Height="26" Width="65" />
+        <TextBox x:Name="tbBackupIP" HorizontalAlignment="Left" Height="20" Margin="287,421,0,0"
+                 TextWrapping="Wrap" VerticalAlignment="Top" Width="85" Text="" />
     </Grid>
 </Window>

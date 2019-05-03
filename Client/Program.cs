@@ -29,10 +29,15 @@ namespace Client
 
         public static void ServerConnenction()
         {
-            var ipfromFile = File.ReadAllLines(@"config.cfg");
-
-            IPAddress.TryParse(ipfromFile[0], out IPAddress ipServer);
-            IPAddress.TryParse(ipfromFile[1], out IPAddress ipBackup);
+            //var ipfromFile = File.ReadAllLines(@"config.cfg");
+            //IPAddress.TryParse(ipfromFile[0], out IPAddress ipServer);
+            //IPAddress.TryParse(ipfromFile[1], out IPAddress ipBackup);
+            Console.Write("Server IP: ");
+            var server = Console.ReadLine();
+            Console.Write("Backup IP: ");
+            var backup = Console.ReadLine();
+            IPAddress.TryParse(server, out IPAddress ipServer);
+            IPAddress.TryParse(backup, out IPAddress ipBackup);
 
             while (true)
             {
@@ -58,10 +63,10 @@ namespace Client
 
             TcpClient client = new TcpClient(localep);
 
-            var ipfromFile = File.ReadAllLines(@"config.cfg");
-            IPAddress.TryParse(ipfromFile[0], out IPAddress ipServer);
+            //var ipfromFile = File.ReadAllLines(@"config.cfg");
+            //IPAddress.TryParse(ipfromFile[0], out IPAddress ipServer);
 
-            var remotep = new IPEndPoint(ipServer, port);
+            var remotep = new IPEndPoint(ipAddress, port);
             try
             {
                 client.Connect(remotep);

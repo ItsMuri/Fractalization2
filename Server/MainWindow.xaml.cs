@@ -42,6 +42,7 @@ namespace Server
             Visibility = Visibility.Collapsed
         };
         private Point mouseDownPos;
+        
         //TransformGroup group = new TransformGroup();
         //ScaleTransform st = new ScaleTransform();
         //TranslateTransform tt = new TranslateTransform();
@@ -50,25 +51,33 @@ namespace Server
         {
             InitializeComponent();
 
-            var ipfromFile = File.ReadAllLines(@"config.cfg");
-            IPAddress.TryParse(ipfromFile[0], out IPAddress ipServer);
-            IPAddress.TryParse(ipfromFile[1], out IPAddress ipBackup);
-
-            var localep = new IPEndPoint(ipServer, 3333);
-            listener = new TcpListener(localep);
-            listener.Start();
-
-            Task T = new Task(() =>
-            {
-                Connection();
-            });
-            T.Start();
+            //var ipfromFile = File.ReadAllLines(@"config.cfg");
+            //IPAddress.TryParse(ipfromFile[0], out IPAddress ipServer);
+            //IPAddress.TryParse(ipfromFile[1], out IPAddress ipBackup);
+            
 
             BorderImage.ClipToBounds = true;
 
             //group.Children.Add(st);
             //group.Children.Add(tt);
             //imageFraktal.RenderTransform = group;
+        }
+        private void TbServerIP_OnKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                IPAddress.TryParse(tbServerIP.Text, out IPAddress ipServer);
+                IPAddress.TryParse(tbServerIP.Text, out IPAddress ipBackup);
+                var localep = new IPEndPoint(ipServer, 3333);
+                listener = new TcpListener(localep);
+                listener.Start();
+
+                Task T = new Task(() =>
+                {
+                    Connection();
+                });
+                T.Start();
+            }
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -140,7 +149,7 @@ namespace Server
 
                         CryptoStream decryptStream = new CryptoStream(netStream, cryptic.CreateDecryptor(), CryptoStreamMode.Read);
                         var verarbeiteteDaten = (Bitmap)System.Drawing.Image.FromStream(decryptStream);
-                        
+
                         verarbeiteteDaten.Save($"bitmap{internalID}.jpg");
 
                         FraktalAnzeigen(internalID, verarbeiteteDaten);
@@ -255,7 +264,7 @@ namespace Server
         {
             mouseDownPos = e.GetPosition(imageFraktal);
 
-            
+
 
             selection.Width = 0;
             selection.Height = 0;
@@ -264,7 +273,7 @@ namespace Server
 
         private void ImageFraktal_MouseMove(object sender, MouseEventArgs e)
         {
-            if (e.LeftButton==MouseButtonState.Pressed)
+            if (e.LeftButton == MouseButtonState.Pressed)
             {
                 Point mousePos = e.GetPosition(imageFraktal);
                 Vector diff = mousePos - mouseDownPos;
@@ -291,10 +300,10 @@ namespace Server
 
         private void ImageFraktal_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            
+
         }
 
-        
+
         private void ImageFraktal_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             var st = (ScaleTransform)((TransformGroup)imageFraktal.RenderTransform).Children.First(tr =>
@@ -303,34 +312,36 @@ namespace Server
             st.ScaleX += zoom;
             st.ScaleY += zoom;
         }
+
         /*
-        private void ImageFraktal_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            imageFraktal.CaptureMouse();
-            var tt = (TranslateTransform)((TransformGroup)imageFraktal.RenderTransform).Children.First(tr =>
-              tr is TranslateTransform);
+private void ImageFraktal_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+{
+   imageFraktal.CaptureMouse();
+   var tt = (TranslateTransform)((TransformGroup)imageFraktal.RenderTransform).Children.First(tr =>
+     tr is TranslateTransform);
 
-            start = e.GetPosition(BorderImage);
-            origin = new Point(tt.X, tt.Y);
-        }
+   start = e.GetPosition(BorderImage);
+   origin = new Point(tt.X, tt.Y);
+}
 
-        private void ImageFraktal_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (imageFraktal.IsMouseCaptured)
-            {
-                var tt = (TranslateTransform)((TransformGroup)imageFraktal.RenderTransform).Children.First(tr =>
-                  tr is TranslateTransform);
+private void ImageFraktal_MouseMove(object sender, MouseEventArgs e)
+{
+   if (imageFraktal.IsMouseCaptured)
+   {
+       var tt = (TranslateTransform)((TransformGroup)imageFraktal.RenderTransform).Children.First(tr =>
+         tr is TranslateTransform);
 
-                var v = start - e.GetPosition(BorderImage);
-                tt.X = origin.X - v.X;
-                tt.Y = origin.Y - v.Y;
-            }
-        }
+       var v = start - e.GetPosition(BorderImage);
+       tt.X = origin.X - v.X;
+       tt.Y = origin.Y - v.Y;
+   }
+}
 
-        private void ImageFraktal_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            imageFraktal.ReleaseMouseCapture();
-        }
-        */
-        }
+private void ImageFraktal_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+{
+   imageFraktal.ReleaseMouseCapture();
+}
+*/
+
+    }
 }
