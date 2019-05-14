@@ -52,7 +52,7 @@
         </ComboBox>
         <Label Content="Server IP:" HorizontalAlignment="Left" Margin="18,416,0,0" VerticalAlignment="Top" Height="26" Width="62" />
         <TextBox x:Name="tbServerIP" HorizontalAlignment="Left" Height="20" Margin="79,422,0,0"
-                 TextWrapping="Wrap" VerticalAlignment="Top" Width="85" Text="" TextChanged="TbServerIP_TextChanged" KeyDown="TbServerIP_OnKeyDown"/>
+                 TextWrapping="Wrap" VerticalAlignment="Top" Width="85" Text="" KeyDown="TbServerIP_OnKeyDown"/>
         <Label Content="Backup IP:" HorizontalAlignment="Left" Margin="222,416,0,0" VerticalAlignment="Top" Height="26" Width="65" />
         <TextBox x:Name="tbBackupIP" HorizontalAlignment="Left" Height="20" Margin="287,421,0,0"
                  TextWrapping="Wrap" VerticalAlignment="Top" Width="85" Text="" />

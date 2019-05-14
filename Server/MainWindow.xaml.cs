@@ -42,7 +42,7 @@ namespace Server
             Visibility = Visibility.Collapsed
         };
         private Point mouseDownPos;
-        
+
         //TransformGroup group = new TransformGroup();
         //ScaleTransform st = new ScaleTransform();
         //TranslateTransform tt = new TranslateTransform();
@@ -54,7 +54,7 @@ namespace Server
             //var ipfromFile = File.ReadAllLines(@"config.cfg");
             //IPAddress.TryParse(ipfromFile[0], out IPAddress ipServer);
             //IPAddress.TryParse(ipfromFile[1], out IPAddress ipBackup);
-            
+
 
             BorderImage.ClipToBounds = true;
 
@@ -259,7 +259,7 @@ namespace Server
                 return bitmapimage;
             }
         }
-
+        /*
         private void ImageFraktal_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             mouseDownPos = e.GetPosition(imageFraktal);
@@ -293,16 +293,19 @@ namespace Server
 
                 selection.Width = diff.X;
                 selection.Height = diff.Y;
-
-
             }
         }
 
         private void ImageFraktal_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-
+            selection.Visibility = Visibility.Collapsed;
+            var st = (ScaleTransform)((TransformGroup)imageFraktal.RenderTransform).Children.First(tr =>
+              tr is ScaleTransform);
+            var zoom = e.Delta > 0 ? .2 : -.2;
+            st.ScaleX += zoom;
+            st.ScaleY += zoom;
         }
-
+        */
 
         private void ImageFraktal_MouseWheel(object sender, MouseWheelEventArgs e)
         {
@@ -313,35 +316,35 @@ namespace Server
             st.ScaleY += zoom;
         }
 
-        /*
-private void ImageFraktal_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-{
-   imageFraktal.CaptureMouse();
-   var tt = (TranslateTransform)((TransformGroup)imageFraktal.RenderTransform).Children.First(tr =>
-     tr is TranslateTransform);
 
-   start = e.GetPosition(BorderImage);
-   origin = new Point(tt.X, tt.Y);
-}
+        private void ImageFraktal_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            imageFraktal.CaptureMouse();
+            var tt = (TranslateTransform)((TransformGroup)imageFraktal.RenderTransform).Children.First(tr =>
+              tr is TranslateTransform);
 
-private void ImageFraktal_MouseMove(object sender, MouseEventArgs e)
-{
-   if (imageFraktal.IsMouseCaptured)
-   {
-       var tt = (TranslateTransform)((TransformGroup)imageFraktal.RenderTransform).Children.First(tr =>
-         tr is TranslateTransform);
+            start = e.GetPosition(BorderImage);
+            origin = new Point(tt.X, tt.Y);
+        }
 
-       var v = start - e.GetPosition(BorderImage);
-       tt.X = origin.X - v.X;
-       tt.Y = origin.Y - v.Y;
-   }
-}
+        private void ImageFraktal_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (imageFraktal.IsMouseCaptured)
+            {
+                var tt = (TranslateTransform)((TransformGroup)imageFraktal.RenderTransform).Children.First(tr =>
+                  tr is TranslateTransform);
 
-private void ImageFraktal_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-{
-   imageFraktal.ReleaseMouseCapture();
-}
-*/
+                var v = start - e.GetPosition(BorderImage);
+                tt.X = origin.X - v.X;
+                tt.Y = origin.Y - v.Y;
+            }
+        }
+
+        private void ImageFraktal_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            imageFraktal.ReleaseMouseCapture();
+        }
+
 
     }
 }
